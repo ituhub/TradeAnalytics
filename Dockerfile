@@ -1,26 +1,30 @@
-# Use Python 3.11 slim image (will automatically get latest 3.11.x)
 FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy all files to container
-COPY . /app
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc g++ && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install system dependencies (if needed)
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
+# Copy requirements first for better caching
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port 80 for Elastic Beanstalk
-EXPOSE 80
+# Copy all application files
+COPY . .
 
-# Health check for Elastic Beanstalk (use port 80)
-HEALTHCHECK CMD curl --fail http://localhost:80/_stcore/health
+# Create necessary directories
+RUN mkdir -p models saved_results
 
-# Run Streamlit app on port 80
-CMD ["streamlit", "run", "application.py", "--server.port=80", "--server.address=0.0.0.0", "--server.enableCORS=false", "--server.enableXsrfProtection=false"]
+# Expose port
+EXPOSE 8050
+
+# Run with gunicorn for production
+CMD exec gunicorn app:server \
+    --bind 0.0.0.0:${PORT:-8050} \
+    --workers 1 \
+    --threads 4 \
+    --timeout 120 \
+    --log-level info
