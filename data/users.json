@@ -1,0 +1,20 @@
+{
+  "user_38e523766a664f6d": {
+    "user_id": "user_38e523766a664f6d",
+    "email": "itubusinesshub@gmail.com",
+    "name": "skyline",
+    "password_hash": "414f1e8a081976a84f2a8adfc34ca6afdb88e53cb3607c9aaff607e9be74d70d",
+    "password_salt": "22b17d2925adcffc19cddb48c11dfff6",
+    "plan": "free",
+    "stripe_customer_id": null,
+    "stripe_subscription_id": null,
+    "created_at": "2026-04-06T00:49:52.456449",
+    "last_login": "2026-04-06T00:49:52.566393",
+    "predictions_today": 2,
+    "predictions_date": "2026-04-06",
+    "total_predictions": 2,
+    "session_token": null,
+    "trial_started": null,
+    "trial_ends": null
+  }
+}
