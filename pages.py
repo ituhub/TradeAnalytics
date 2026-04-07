@@ -1573,99 +1573,138 @@ def build_model_training_page(ticker: str):
     ])
 
 
-# ─── ADMIN PANEL ─────────────────────────────────────────────────────────────
+# ─── ADMIN PANEL — MAINTENANCE & MONITORING DASHBOARD ────────────────────────
 
 def build_admin_page():
-    """Build the Admin Panel page."""
+    """Build the Admin Panel — user management, email center, system monitoring."""
 
-    # Simulated key data
-    keys = {
-        "CUST_KEY_001": {"desc": "Customer Alpha", "used": 3, "total": 5, "remaining": 2, "expires": "2026-12-31", "status": "Active"},
-        "CUST_KEY_002": {"desc": "Customer Beta", "used": 5, "total": 5, "remaining": 0, "expires": "2026-12-31", "status": "Exhausted"},
-        "CUST_KEY_003": {"desc": "Customer Gamma", "used": 1, "total": 10, "remaining": 9, "expires": "2026-06-30", "status": "Active"},
-        "CUST_KEY_004": {"desc": "Customer Delta", "used": 0, "total": 5, "remaining": 5, "expires": "2025-12-31", "status": "Expired"},
-    }
+    # ── Fetch registered users from Firestore ────────────────────
+    users_list = []
+    try:
+        from email_service import get_all_users
+        users_list = get_all_users("all")
+    except Exception:
+        pass
 
-    total = len(keys)
-    active = sum(1 for k in keys.values() if k["status"] == "Active")
-    exhausted = sum(1 for k in keys.values() if k["status"] == "Exhausted")
-    expired = sum(1 for k in keys.values() if k["status"] == "Expired")
+    total_users = len(users_list)
+    free_users = sum(1 for u in users_list if u.get("plan", "free") == "free")
+    paid_users = total_users - free_users
+    plans_count = {}
+    for u in users_list:
+        p = u.get("plan", "free")
+        plans_count[p] = plans_count.get(p, 0) + 1
 
-    # Stats
+    # ── Stats cards ──────────────────────────────────────────────
     stats = html.Div([
-        make_metric_card("Total Keys", f"{total}", None, "#93c5fd", "#3b82f6"),
-        make_metric_card("Active Keys", f"{active}", None, "#10b981", "#10b981"),
-        make_metric_card("Exhausted", f"{exhausted}", None, "#f59e0b", "#f59e0b"),
-        make_metric_card("Expired", f"{expired}", None, "#ef4444", "#ef4444"),
+        make_metric_card("Total Users", f"{total_users}", None, "#93c5fd", "#3b82f6"),
+        make_metric_card("Free Users", f"{free_users}", None, "#64748b", "#64748b"),
+        make_metric_card("Paid Users", f"{paid_users}", None, "#10b981", "#10b981"),
+        make_metric_card("Revenue/mo", f"${_est_revenue(plans_count):,.0f}", None, "#f59e0b", "#f59e0b"),
     ], className="ecard-grid ecard-grid-4")
 
-    # Key table
-    rows = []
-    for key, info in keys.items():
-        sc = "#10b981" if info["status"] == "Active" else "#f59e0b" if info["status"] == "Exhausted" else "#ef4444"
-        rows.append(html.Tr([
-            html.Td(key[:12] + "...", style={"padding": "10px", "fontFamily": "JetBrains Mono", "fontSize": "12px"}),
-            html.Td(info["desc"], style={"padding": "10px"}),
-            html.Td(f"{info['used']}/{info['total']}", style={"padding": "10px", "fontFamily": "JetBrains Mono"}),
-            html.Td(f"{info['remaining']}", style={"padding": "10px", "fontWeight": "600",
-                                                     "color": "#10b981" if info["remaining"] > 0 else "#ef4444"}),
-            html.Td(info["expires"], style={"padding": "10px", "fontSize": "12px"}),
-            html.Td(html.Span(info["status"], style={
-                "padding": "2px 10px", "borderRadius": "12px", "fontSize": "11px",
-                "fontWeight": "600", "color": "white", "background": sc,
+    # ── Users table ──────────────────────────────────────────────
+    user_rows = []
+    for u in users_list[:50]:
+        plan = u.get("plan", "free")
+        pc = {"free": "#64748b", "starter": "#06b6d4", "professional": "#8b5cf6",
+              "institutional": "#f59e0b"}.get(plan, "#64748b")
+        user_rows.append(html.Tr([
+            html.Td(u.get("name", "—"), style={"padding": "10px", "color": "#e2e8f0",
+                                                  "fontSize": "13px", "fontWeight": "500"}),
+            html.Td(u.get("email", ""), style={"padding": "10px", "fontSize": "12px",
+                                                 "fontFamily": "JetBrains Mono", "color": "#94a3b8"}),
+            html.Td(html.Span(plan.upper(), style={
+                "padding": "2px 10px", "borderRadius": "12px", "fontSize": "10px",
+                "fontWeight": "600", "color": "white", "background": pc,
             }), style={"padding": "10px"}),
         ]))
 
-    table = html.Table([
+    if not user_rows:
+        user_rows = [html.Tr([html.Td("No users found — Firestore may not be connected.",
+                                        colSpan=3, style={"padding": "20px", "textAlign": "center",
+                                                          "color": "#64748b"})])]
+
+    users_table = html.Table([
         html.Thead(html.Tr([
             html.Th(h, style={"padding": "10px", "borderBottom": "1px solid rgba(99,102,241,0.15)",
                                "color": "#64748b", "fontSize": "11px", "textTransform": "uppercase",
                                "fontWeight": "600", "letterSpacing": "1px"})
-            for h in ["Key", "Description", "Used/Total", "Remaining", "Expires", "Status"]
+            for h in ["Name", "Email", "Plan"]
         ])),
-        html.Tbody(rows),
+        html.Tbody(user_rows),
     ], style={"width": "100%", "borderCollapse": "collapse"})
 
-    # Usage chart
-    fig_usage = go.Figure(go.Bar(
-        x=[k[:12] for k in keys.keys()],
-        y=[info["used"] for info in keys.values()],
-        marker_color=["#6366f1", "#f59e0b", "#10b981", "#ef4444"],
-        text=[info["used"] for info in keys.values()],
-        textposition="auto",
-    ))
-    fig_usage.update_layout(
-        template="plotly_dark", height=280,
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        title=dict(text="Predictions Used by Key", font=dict(size=14, color="#e2e8f0")),
-        yaxis=dict(title="Predictions", gridcolor="rgba(99,102,241,0.06)"),
-        margin=dict(l=40, r=20, t=40, b=60),
-    )
+    # ── Plan distribution chart ──────────────────────────────────
+    if plans_count:
+        plan_names = [k.title() for k in plans_count.keys()]
+        plan_vals = list(plans_count.values())
+        plan_colors = [{"free": "#64748b", "starter": "#06b6d4", "professional": "#8b5cf6",
+                        "institutional": "#f59e0b"}.get(k, "#6366f1") for k in plans_count.keys()]
+        fig_plans = go.Figure(go.Pie(
+            labels=plan_names, values=plan_vals,
+            marker=dict(colors=plan_colors),
+            hole=0.55, textinfo="label+value",
+            textfont=dict(size=12, color="#e2e8f0"),
+        ))
+        fig_plans.update_layout(
+            template="plotly_dark", height=280,
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            title=dict(text="Users by Plan", font=dict(size=14, color="#e2e8f0")),
+            margin=dict(l=20, r=20, t=40, b=20),
+            showlegend=False,
+        )
+        plan_chart = html.Div([dcc.Graph(figure=fig_plans, config={"displayModeBar": False})], className="ecard")
+    else:
+        plan_chart = html.Div("No user data available.", className="ecard",
+                               style={"textAlign": "center", "padding": "30px", "color": "#64748b"})
 
-    # System status
+    # ── Email Center (from email_admin_panel module) ─────────────
+    email_panel = html.Div()
+    try:
+        from email_admin_panel import email_admin_layout
+        email_panel = email_admin_layout()
+    except ImportError:
+        email_panel = html.Div([
+            html.Div("📧 Email Center", style={"color": "#e2e8f0", "fontWeight": "600", "marginBottom": "8px"}),
+            html.P("email_service.py and email_admin_panel.py not found. "
+                    "Add them to your project to enable email notifications.",
+                    style={"color": "#64748b", "fontSize": "13px"}),
+        ], className="ecard", style={"padding": "20px"})
+
+    # ── System Status ────────────────────────────────────────────
     sys_status = html.Div([
-        make_metric_card("Backend", "🟢 OPERATIONAL" if BACKEND_AVAILABLE else "🟡 SIMULATION", None,
+        make_metric_card("Backend", "🟢 LIVE" if BACKEND_AVAILABLE else "🟡 DEMO", None,
                          "#10b981" if BACKEND_AVAILABLE else "#f59e0b", "#3b82f6"),
-        make_metric_card("API Status", "🟢 CONNECTED" if FMP_API_KEY else "🟡 SIMULATED", None,
+        make_metric_card("FMP API", "🟢 OK" if FMP_API_KEY else "🟡 SIM", None,
                          "#10b981" if FMP_API_KEY else "#f59e0b", "#10b981"),
         make_metric_card("Dash Engine", "🟢 ACTIVE", None, "#10b981", "#10b981"),
-    ], className="ecard-grid ecard-grid-3")
+        make_metric_card("Backtest", "🟢 READY" if AI_BACKTEST_AVAILABLE else "🟡 SIM", None,
+                         "#10b981" if AI_BACKTEST_AVAILABLE else "#f59e0b", "#10b981"),
+    ], className="ecard-grid ecard-grid-4")
 
     return html.Div([
         html.Div([
-            html.H2("🔧 Admin Panel", style={"margin": "0 0 4px 0"}),
-            html.P("Key management, usage analytics, and system tools", style={"color": "#64748b", "fontSize": "13px", "margin": "0"}),
-            html.Span("🔑 Master Key Only", style={
+            html.H2("🛡️ Admin Dashboard", style={"margin": "0 0 4px 0"}),
+            html.P("User management, email notifications, and system monitoring",
+                   style={"color": "#64748b", "fontSize": "13px", "margin": "0"}),
+            html.Span("🔐 Admin Only", style={
                 "padding": "2px 10px", "borderRadius": "12px", "fontSize": "11px",
                 "fontWeight": "600", "color": "#fcd34d", "background": "rgba(252,211,77,0.15)",
                 "border": "1px solid rgba(252,211,77,0.3)", "marginTop": "8px", "display": "inline-block",
             }),
         ], className="ecard"),
 
-        make_section_header("📊", "Key Statistics"), stats,
-        make_section_header("📋", "Detailed Key Status"),
-        html.Div([table], className="ecard"),
-        make_section_header("📈", "Usage Overview"),
-        html.Div([dcc.Graph(figure=fig_usage, config={"displayModeBar": False})], className="ecard"),
+        make_section_header("👥", "User Overview"), stats,
+        make_section_header("📋", "Registered Users"),
+        html.Div([users_table], className="ecard"),
+        html.Div([plan_chart,
+        ], style={"display": "grid", "gridTemplateColumns": "1fr", "gap": "16px", "marginTop": "16px"}),
+        make_section_header("📧", "Email Center"), email_panel,
         make_section_header("⚙️", "System Status"), sys_status,
     ])
+
+
+def _est_revenue(plans_count):
+    """Estimate monthly revenue from plan distribution."""
+    prices = {"free": 0, "starter": 49, "professional": 129, "institutional": 349}
+    return sum(prices.get(p, 0) * c for p, c in plans_count.items())

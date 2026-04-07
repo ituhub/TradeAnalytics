@@ -57,6 +57,30 @@ except ImportError as e:
     logger_temp.warning(f"⚠️ SaaS auth module not available: {e} — running without auth")
 
 # =============================================================================
+# EMAIL SERVICE & DISCLAIMER IMPORTS
+# =============================================================================
+EMAIL_SERVICE_AVAILABLE = False
+try:
+    from email_service import init_email_service, send_market_alert, send_subscription_notification
+    EMAIL_SERVICE_AVAILABLE = True
+except ImportError:
+    pass
+
+try:
+    from disclaimer import build_disclaimer_overlay
+except ImportError:
+    def build_disclaimer_overlay():
+        return html.Div()
+
+try:
+    from app_guide import build_app_guide_page
+    APP_GUIDE_AVAILABLE = True
+except ImportError:
+    APP_GUIDE_AVAILABLE = False
+    def build_app_guide_page():
+        return html.Div("App Guide not available.", style={"color": "#64748b", "padding": "40px"})
+
+# =============================================================================
 # LOGGING
 # =============================================================================
 logging.basicConfig(
@@ -2003,6 +2027,7 @@ app.layout = html.Div([
     dcc.Store(id="app-state", data={"predictions_count": 0, "disclaimer_accepted": False, "premium_active": False}),
     dcc.Store(id="ftmo-store", data={"setup_done": False, "balance": 100000, "daily_limit": 5, "total_limit": 10, "positions": []}),
     dcc.Store(id="user-session", storage_type="local", data=None),
+    dcc.Store(id="disclaimer-store", storage_type="local", data={"accepted": False}),
     dcc.Location(id="url", refresh=False),
 
     # Auth-gated container: login page OR main dashboard
@@ -2042,7 +2067,7 @@ def _build_main_dashboard(user=None):
             "disabled": tf not in allowed_timeframes,
         })
 
-    return html.Div([
+    dashboard = html.Div([
         # ── SIDEBAR ──
         html.Div([
             html.Div([
@@ -2079,6 +2104,7 @@ def _build_main_dashboard(user=None):
                         {"label": "", "value": "backtesting"},
                         {"label": "", "value": "ftmo_dashboard"},
                         {"label": "", "value": "model_training"},
+                        {"label": "", "value": "app_guide"},
                         {"label": "", "value": "admin_panel"},
                     ],
                     value="ai_prediction",
@@ -2105,6 +2131,7 @@ def _build_main_dashboard(user=None):
                         ("💼", "Portfolio Mgmt", "portfolio_mgmt"),
                         ("📈", "Backtesting", "backtesting"),
                         ("🧠", "Model Training", "model_training"),
+                        ("📖", "App Guide", "app_guide"),
                     ] + ([
                         ("🏦", "FTMO Dashboard", "ftmo_dashboard"),
                         ("🛡️", "Admin Panel", "admin_panel"),
@@ -2236,6 +2263,14 @@ def _build_main_dashboard(user=None):
 
     ], style={"display": "flex", "minHeight": "100vh", "background": "#0a0e1a"})
 
+    # Wrap in disclaimer-gated container
+    return html.Div([
+        # Disclaimer overlay (hidden when accepted)
+        html.Div(id="disclaimer-container", children=build_disclaimer_overlay()),
+        # Main content (blurred until disclaimer accepted)
+        html.Div(id="main-app-content", children=dashboard),
+    ])
+
 
 # =============================================================================
 # AUTH ROUTING — Master callback that gates the entire app
@@ -2267,6 +2302,27 @@ def route_auth(session_data, pathname):
             current_plan = user.get("plan", "free") if user else "free"
             return build_pricing_page(current_plan)
         return html.Div("Pricing not available", style={"color": "#e2e8f0", "padding": "40px"})
+
+    if pathname and pathname.startswith("/payment-success"):
+        # Stripe redirects here after successful checkout
+        return html.Div([
+            html.Div([
+                html.Div("🎉", style={"fontSize": "64px", "marginBottom": "16px"}),
+                html.H2("Payment Successful!", style={"color": "#10b981", "fontWeight": "800", "margin": "0 0 12px"}),
+                html.P("Your subscription is now active. Welcome to your new plan!",
+                       style={"color": "#94a3b8", "fontSize": "15px", "margin": "0 0 24px"}),
+                html.A("→ Go to Dashboard", href="/", style={
+                    "display": "inline-block", "padding": "14px 32px", "borderRadius": "12px",
+                    "background": "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                    "color": "white", "textDecoration": "none", "fontWeight": "700", "fontSize": "15px",
+                }),
+            ], style={
+                "maxWidth": "480px", "margin": "80px auto", "textAlign": "center", "padding": "48px 32px",
+                "background": "rgba(15,23,42,0.8)", "borderRadius": "20px",
+                "border": "1px solid rgba(16,185,129,0.2)",
+            }),
+        ], style={"background": "#0a0e1a", "minHeight": "100vh",
+                  "display": "flex", "alignItems": "center", "justifyContent": "center"})
 
     # If no auth module, show app without gating
     if not SAAS_AUTH_AVAILABLE:
@@ -2407,6 +2463,43 @@ def handle_upgrade_click(n_clicks, session_data):
     return "/pricing"
 
 
+# ── PRICING PAGE UPGRADE BUTTONS ──────────────────────────────────────────
+
+@callback(
+    Output("url", "href", allow_duplicate=True),
+    Input({"type": "upgrade-btn", "index": ALL}, "n_clicks"),
+    State("user-session", "data"),
+    prevent_initial_call=True,
+)
+def handle_pricing_upgrade(n_clicks_list, session_data):
+    """Handle clicks on plan upgrade buttons on the pricing page."""
+    if not ctx.triggered_id or not any(n_clicks_list):
+        raise PreventUpdate
+
+    plan_id = ctx.triggered_id["index"]
+    if not SAAS_AUTH_AVAILABLE:
+        raise PreventUpdate
+
+    user = None
+    if session_data:
+        token = session_data.get("token") if isinstance(session_data, dict) else None
+        if token:
+            user = get_user_by_token(token)
+
+    if not user:
+        return "/pricing"
+
+    # Create Stripe Checkout session
+    checkout_url = create_checkout_session(user, plan_id, "monthly")
+    if checkout_url:
+        logger.info(f"✅ Redirecting {user.get('email')} to Stripe checkout for {plan_id}")
+        return checkout_url
+
+    # Fallback — Stripe not configured or session creation failed
+    logger.warning(f"⚠️ Stripe checkout failed for {plan_id} — redirecting to pricing")
+    return "/pricing"
+
+
 # ── AUTH TAB TOGGLE (Login ↔ Register) ──────────────────────────────────────
 
 @callback(
@@ -2510,7 +2603,8 @@ PAGE_HEADERS = {
     "backtesting": ("📈", "Advanced AI Backtesting", "Walk-forward validation and strategy analysis"),
     "ftmo_dashboard": ("🏦", "FTMO Dashboard", "FTMO challenge tracking and risk management"),
     "model_training": ("🧠", "Model Training Center", "Train, monitor, and manage AI models"),
-    "admin_panel": ("🔧", "Admin Panel", "Key management, usage analytics, and system tools"),
+    "app_guide": ("📖", "Platform Guide", "How the platform works, features, and AI model explanations"),
+    "admin_panel": ("🛡️", "Admin Dashboard", "User management, email center, and system monitoring"),
 }
 
 
@@ -2606,6 +2700,8 @@ def route_page(page, prediction, ticker, ftmo_state, session_data):
         content = build_ftmo_page(ftmo_state or {})
     elif page == "model_training":
         content = build_model_training_page(ticker or "BTCUSD")
+    elif page == "app_guide":
+        content = build_app_guide_page()
     elif page == "admin_panel":
         content = build_admin_page()
     else:
@@ -2801,6 +2897,26 @@ def run_prediction(n_clicks, ticker, models, timeframe, mtf_timeframes, session_
     except Exception as e:
         logger.warning(f"Failed to save prediction: {e}")
 
+    # ── Auto Market Alert (email pro users on high-confidence signals) ──
+    if EMAIL_SERVICE_AVAILABLE and prediction:
+        try:
+            confidence = prediction.get("confidence", 0)
+            if confidence >= 80:
+                signal = prediction.get("signal", "HOLD")
+                if signal in ("BUY", "SELL"):
+                    send_market_alert(
+                        ticker=ticker,
+                        signal=signal,
+                        confidence=confidence,
+                        predicted_price=prediction.get("predicted_price", 0),
+                        current_price=prediction.get("current_price", 0),
+                        details=f"Auto-generated alert from {len(prediction.get('models_used', []))}-model ensemble.",
+                        plan_filter="pro",
+                    )
+                    logger.info(f"📧 Auto market alert sent: {signal} {ticker} ({confidence:.1f}%)")
+        except Exception as e:
+            logger.debug(f"Auto market alert skipped: {e}")
+
     # Status message with usage counter
     usage_suffix = ""
     if SAAS_AUTH_AVAILABLE and user:
@@ -2820,7 +2936,7 @@ def run_prediction(n_clicks, ticker, models, timeframe, mtf_timeframes, session_
 # ── NAV BUTTON CALLBACKS ─────────────────────────────────────────────────────
 
 NAV_PAGES = ["ai_prediction", "advanced_analytics", "portfolio_mgmt", "backtesting",
-             "ftmo_dashboard", "model_training", "admin_panel"]
+             "ftmo_dashboard", "model_training", "app_guide", "admin_panel"]
 
 @callback(
     Output("page-nav", "value"),
@@ -2953,6 +3069,59 @@ def reoptimize_portfolio(n_clicks, assets, risk_tolerance, target_return_pct):
 
 
 # =============================================================================
+# DISCLAIMER CALLBACKS
+# =============================================================================
+
+@callback(
+    Output("disclaimer-container", "style"),
+    Output("main-app-content", "style"),
+    Input("disclaimer-store", "data"),
+    Input("disclaimer-accept-btn", "n_clicks"),
+    Input("disclaimer-decline-btn", "n_clicks"),
+    State("disclaimer-store", "data"),
+    prevent_initial_call=True,
+)
+def handle_disclaimer(store_data, accept_clicks, decline_clicks, current_store):
+    triggered = ctx.triggered_id
+
+    if triggered == "disclaimer-accept-btn" and accept_clicks:
+        # User accepted — hide overlay, show app
+        return {"display": "none"}, {"filter": "none"}
+
+    if triggered == "disclaimer-decline-btn" and decline_clicks:
+        # User declined — keep overlay, blur app more
+        return (
+            {"position": "fixed", "top": "0", "left": "0", "width": "100%", "height": "100%",
+             "background": "rgba(0,0,0,0.7)", "backdropFilter": "blur(8px)",
+             "display": "flex", "alignItems": "center", "justifyContent": "center", "zIndex": "9999"},
+            {"filter": "blur(12px)", "pointerEvents": "none"},
+        )
+
+    # Check if already accepted in store
+    if store_data and isinstance(store_data, dict) and store_data.get("accepted"):
+        return {"display": "none"}, {"filter": "none"}
+
+    # Default: show overlay, blur app
+    return (
+        {"position": "fixed", "top": "0", "left": "0", "width": "100%", "height": "100%",
+         "background": "rgba(0,0,0,0.7)", "backdropFilter": "blur(8px)",
+         "display": "flex", "alignItems": "center", "justifyContent": "center", "zIndex": "9999"},
+        {"filter": "blur(4px)", "pointerEvents": "none"},
+    )
+
+
+@callback(
+    Output("disclaimer-store", "data", allow_duplicate=True),
+    Input("disclaimer-accept-btn", "n_clicks"),
+    prevent_initial_call=True,
+)
+def save_disclaimer_acceptance(n_clicks):
+    if not n_clicks:
+        raise PreventUpdate
+    return {"accepted": True}
+
+
+# =============================================================================
 # DOWNLOAD AI MODELS FROM GCS ON STARTUP
 # =============================================================================
 try:
@@ -2970,6 +3139,21 @@ except Exception as e:
 
 if SAAS_AUTH_AVAILABLE:
     setup_auth_system(app, server)
+
+# Initialize email service
+if EMAIL_SERVICE_AVAILABLE:
+    try:
+        init_email_service(firestore_db=_firestore_db)
+    except Exception as e:
+        logger.warning(f"⚠️ Email service init failed: {e}")
+
+# Register email admin callbacks
+try:
+    from email_admin_panel import register_email_callbacks
+    register_email_callbacks(app)
+    logger.info("✅ Email admin callbacks registered")
+except ImportError:
+    pass
 
 # =============================================================================
 # RUN
