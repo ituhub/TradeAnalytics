@@ -1,8 +1,8 @@
 """
 AI TRADING PROFESSIONAL — DASH APPLICATION
 ===========================================================================
-Full conversion of the Streamlit AI Predictions system to Dash/Plotly.
-Covers: Prediction Engine, Prediction Display, Trading Strategy,
+Full conversion of the Streamlit Market Analysiss system to Dash/Plotly.
+Covers: Prediction Engine, Prediction Display, Position Analysis,
         Forecast Analysis, Risk Assessment, Cross-Validation.
 ===========================================================================
 """
@@ -165,10 +165,10 @@ except ImportError as e:
     # Provide stubs so the UI can run in demo mode
     def get_asset_type(ticker):
         t = ticker.upper()
-        crypto = {"BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "DOGEUSD", "ADAUSD", "AVAXUSD", "DOTUSD"}
-        forex = {"EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "USDCHF", "NZDUSD", "EURGBP"}
-        commodity = {"XAUUSD", "XAGUSD", "CLUSD", "NGUSD"}
-        index = {"SPY", "QQQ", "DIA", "IWM", "^GSPC", "^DJI", "^IXIC"}
+        crypto = {"BTCUSD", "ETHUSD", "SOLUSD"}
+        forex = {"USDJPY"}
+        commodity = {"CC=F", "NG=F", "GC=F", "KC=F", "SI=F", "HG=F"}
+        index = {"^GDAXI", "^GSPC", "^HSI"}
         if t in crypto:
             return "crypto"
         if t in forex:
@@ -323,11 +323,10 @@ def load_results(category: str = None, ticker: str = None, limit: int = 20) -> l
 # TICKER UNIVERSE
 # =============================================================================
 TICKER_GROUPS = {
-    "🪙 Crypto": ["BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "DOGEUSD", "ADAUSD", "AVAXUSD", "DOTUSD"],
-    "💱 Forex": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "USDCHF", "NZDUSD", "EURGBP"],
-    "🛢️ Commodities": ["XAUUSD", "XAGUSD", "CLUSD", "NGUSD"],
-    "📊 Indices": ["SPY", "QQQ", "DIA", "IWM"],
-    "💼 Stocks": ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META", "NFLX"],
+    "🪙 Crypto": ["ETHUSD", "SOLUSD", "BTCUSD"],
+    "💱 Forex": ["USDJPY"],
+    "🛢️ Commodities": ["CC=F", "NG=F", "GC=F", "KC=F", "SI=F", "HG=F"],
+    "📊 Indices": ["^GDAXI", "^GSPC", "^HSI"],
 }
 ALL_TICKERS = [t for group in TICKER_GROUPS.values() for t in group]
 
@@ -335,8 +334,8 @@ MODEL_OPTIONS = [
     {"label": "Advanced Transformer", "value": "advanced_transformer"},
     {"label": "CNN-LSTM Hybrid", "value": "cnn_lstm"},
     {"label": "Temporal Conv. Network", "value": "enhanced_tcn"},
-    {"label": "Informer", "value": "informer"},
-    {"label": "N-BEATS", "value": "nbeats"},
+    {"label": "Informer", "value": "enhanced_informer"},
+    {"label": "N-BEATS", "value": "enhanced_nbeats"},
     {"label": "LSTM-GRU Ensemble", "value": "lstm_gru_ensemble"},
     {"label": "XGBoost", "value": "xgboost"},
     {"label": "Sklearn Ensemble", "value": "sklearn_ensemble"},
@@ -457,8 +456,8 @@ class PredictionEngine:
             # ── Resolve available models ─────────────────────────────
             if not models:
                 models = [
-                    "advanced_transformer", "cnn_lstm", "enhanced_tcn", "informer",
-                    "nbeats", "lstm_gru_ensemble", "xgboost", "sklearn_ensemble",
+                    "advanced_transformer", "cnn_lstm", "enhanced_tcn", "enhanced_informer",
+                    "enhanced_nbeats", "lstm_gru_ensemble", "xgboost", "sklearn_ensemble",
                 ]
 
             # Check in-process cache first
@@ -1274,7 +1273,7 @@ def build_price_trajectory_chart(prediction: Dict) -> go.Figure:
         marker=dict(size=16, color=line_main, line=dict(color="#0f172a", width=2), symbol="star"),
         text=[f"  ${predicted_price:.4f}"], textposition="middle right",
         textfont=dict(size=12, color=line_main, family="monospace"),
-        name="AI Prediction",
+        name="Market Analysis",
         hovertemplate="Predicted: <b>$%{y:.4f}</b><extra></extra>",
     ))
 
@@ -1421,7 +1420,7 @@ def make_hero_card(direction_icon, direction_text, ticker, pct, is_bullish):
         html.Div(direction_icon, className="hero-icon"),
         html.H1(direction_text, className="hero-title", style={"color": direction_color}),
         html.P([
-            "AI Prediction for ",
+            "Market Analysis for ",
             html.Strong(ticker, style={"color": "#e2e8f0"}),
         ], className="hero-sub"),
         html.Div(
@@ -1512,7 +1511,7 @@ def build_prediction_results(prediction: Dict):
         banner = make_source_banner(True, "📊 LIVE DATA PREDICTION 🔬",
                                      "Real-time technical analysis using live FMP market data")
     elif not fallback_mode and source == "live_ai_backend":
-        banner = make_source_banner(True, "🔥 LIVE AI PREDICTION 🤖",
+        banner = make_source_banner(True, "🔥 LIVE AI ANALYSIS 🤖",
                                      "Real-time analysis with full backend integration")
     else:
         banner = make_source_banner(False, "⚡ ENHANCED SIMULATION 🎯",
@@ -1532,7 +1531,7 @@ def build_prediction_results(prediction: Dict):
     # Key metrics
     metrics = make_grid([
         make_metric_card("Current Price", f"${current_price:.4f}", "Market Price", "#93c5fd", "#3b82f6"),
-        make_metric_card("AI Prediction", f"${predicted_price:.4f}", f"{price_change_pct:+.2f}%",
+        make_metric_card("Market Analysis", f"${predicted_price:.4f}", f"{price_change_pct:+.2f}%",
                          direction_color, direction_color),
         make_metric_card("AI Confidence", f"{confidence:.1f}%", f"{conf_level} CONFIDENCE",
                          conf_color, conf_color),
@@ -2014,8 +2013,8 @@ app = dash.Dash(
         "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap",
     ],
     suppress_callback_exceptions=True,
-    title="AI Trading Professional",
-    update_title="Loading...",
+    title="MarketLens AI",
+    update_title="Analyzing...",
 )
 server = app.server
 
@@ -2028,7 +2027,11 @@ app.layout = html.Div([
     dcc.Store(id="ftmo-store", data={"setup_done": False, "balance": 100000, "daily_limit": 5, "total_limit": 10, "positions": []}),
     dcc.Store(id="user-session", storage_type="local", data=None),
     dcc.Store(id="disclaimer-store", storage_type="local", data={"accepted": False}),
+    dcc.Store(id="contact-form-store", data={"visible": False}),
     dcc.Location(id="url", refresh=False),
+
+    # Contact form modal (global, always present)
+    build_contact_modal(),
 
     # Auth-gated container: login page OR main dashboard
     html.Div(id="app-container"),
@@ -2080,8 +2083,8 @@ def _build_main_dashboard(user=None):
                               "alignItems": "center", "justifyContent": "center",
                               "boxShadow": "0 4px 15px rgba(99,102,241,0.25)"}),
                     html.Div([
-                        html.Div("AI Trading Pro", className="sidebar-logo"),
-                        html.Div("Professional AI Analysis", className="sidebar-sub"),
+                        html.Div("MarketLens", className="sidebar-logo"),
+                        html.Div("Advanced Market Analysis & Research", className="sidebar-sub"),
                     ]),
                 ], style={"display": "flex", "alignItems": "center", "gap": "12px", "marginBottom": "24px"}),
 
@@ -2126,7 +2129,7 @@ def _build_main_dashboard(user=None):
                     className="sidebar-nav-btn",
                     )
                     for icon, label, value in [
-                        ("🤖", "AI Prediction", "ai_prediction"),
+                        ("🔬", "Market Analysis", "ai_prediction"),
                         ("📊", "Advanced Analytics", "advanced_analytics"),
                         ("💼", "Portfolio Mgmt", "portfolio_mgmt"),
                         ("📈", "Backtesting", "backtesting"),
@@ -2253,9 +2256,9 @@ def _build_main_dashboard(user=None):
             html.Div([
                 html.Hr(style={"borderColor": "rgba(99,102,241,0.08)"}),
                 html.Div([
-                    html.Span("AI Trading Professional — Dash Edition", style={"color": "#475569", "fontSize": "12px"}),
+                    html.Span("MarketLens AI — Dash Edition", style={"color": "#475569", "fontSize": "12px"}),
                     html.Span(" · ", style={"color": "#334155"}),
-                    html.Span("Not financial advice", style={"color": "#475569", "fontSize": "12px"}),
+                    html.Span("For research purposes only", style={"color": "#475569", "fontSize": "12px"}),
                 ], style={"textAlign": "center", "padding": "16px 0"}),
             ]),
 
@@ -2597,7 +2600,7 @@ def handle_password_reset(n_clicks, email, password, confirm_password):
 # ── PAGE ROUTING ─────────────────────────────────────────────────────────────
 
 PAGE_HEADERS = {
-    "ai_prediction": ("🤖", "Advanced AI Prediction Engine", "Professional-grade AI analysis with 8 advanced models"),
+    "ai_prediction": ("🤖", "Advanced Market Analysis Engine", "Advanced multi-model market analysis and research"),
     "advanced_analytics": ("📊", "Advanced Analytics Suite", "Market regime detection, drift analysis, and alternative data"),
     "portfolio_mgmt": ("💼", "Portfolio Management", "Black-Litterman AI portfolio optimization"),
     "backtesting": ("📈", "Advanced AI Backtesting", "Walk-forward validation and strategy analysis"),
@@ -2618,7 +2621,7 @@ PAGE_HEADERS = {
     State("user-session", "data"),
 )
 def route_page(page, prediction, ticker, ftmo_state, session_data):
-    icon, title, subtitle = PAGE_HEADERS.get(page, ("🤖", "AI Trading Pro", ""))
+    icon, title, subtitle = PAGE_HEADERS.get(page, ("🤖", "MarketLens", ""))
 
     # ── Resolve user for plan gating ─────────────────────────────────
     user = None
@@ -2711,7 +2714,7 @@ def route_page(page, prediction, ticker, ftmo_state, session_data):
 
 
 def build_ai_prediction_page(prediction, ticker):
-    """Build the AI Prediction page (default page)."""
+    """Build the Market Analysis page (default page)."""
     ticker = ticker or "BTCUSD"
     asset_type = get_asset_type(ticker)
 
@@ -2752,7 +2755,7 @@ def build_ai_prediction_page(prediction, ticker):
     # Predict button
     predict_btn = html.Div([
         html.Button(
-            "🎯 Generate AI Prediction",
+            "🔬 Run AI Analysis",
             id="predict-btn",
             n_clicks=0,
             style={
@@ -2779,7 +2782,7 @@ def build_ai_prediction_page(prediction, ticker):
         results = build_prediction_results(prediction)
         tabs = dcc.Tabs([
             dcc.Tab(
-                label="📈 Trading Strategy",
+                label="📈 Position Analysis",
                 children=html.Div(build_trading_strategy_tab(prediction), style={"padding": "20px 0"}),
                 style={"backgroundColor": "transparent", "borderColor": "rgba(99,102,241,0.12)",
                        "color": "#94a3b8", "fontWeight": "600", "padding": "10px 20px"},
@@ -2810,7 +2813,7 @@ def build_ai_prediction_page(prediction, ticker):
         results = html.Div([
             html.Div("🎯", style={"fontSize": "48px", "marginBottom": "12px"}),
             html.H3("Ready to Analyze", style={"color": "#64748b", "fontWeight": "600"}),
-            html.P("Select an asset and click 'Generate AI Prediction' to begin",
+            html.P("Select an asset and click 'Run AI Analysis' to begin",
                    style={"color": "#475569", "fontSize": "14px"}),
         ], className="ecard", style={"textAlign": "center", "padding": "60px 20px"})
         tabs = html.Div()
@@ -2924,11 +2927,11 @@ def run_prediction(n_clicks, ticker, models, timeframe, mtf_timeframes, session_
         usage_suffix = f" ({used_now}/{lim} today)"
 
     if not fallback and source == "live_ai_backend":
-        msg = html.Div(f"🔥 LIVE AI PREDICTION — {timeframe}{usage_suffix}", style={"color": "#10b981", "fontWeight": "600"})
+        msg = html.Div(f"🔥 LIVE AI ANALYSIS — {timeframe}{usage_suffix}", style={"color": "#10b981", "fontWeight": "600"})
     elif not fallback and source == "data_driven_technical":
-        msg = html.Div(f"📊 LIVE DATA — {timeframe} technical analysis{usage_suffix}", style={"color": "#10b981", "fontWeight": "600"})
+        msg = html.Div(f"📊 LIVE DATA — technical analysis{usage_suffix}", style={"color": "#10b981", "fontWeight": "600"})
     else:
-        msg = html.Div(f"⚡ DEMO PREDICTION — Simulation mode{usage_suffix}", style={"color": "#f59e0b", "fontWeight": "600"})
+        msg = html.Div(f"⚡ DEMO ANALYSIS — Simulation mode{usage_suffix}", style={"color": "#f59e0b", "fontWeight": "600"})
 
     return prediction, msg
 
@@ -3066,6 +3069,169 @@ def reoptimize_portfolio(n_clicks, assets, risk_tolerance, target_return_pct):
     risk_tolerance = risk_tolerance or "Moderate"
     target_return = (target_return_pct or 12) / 100.0
     return build_portfolio_page(assets, risk_tolerance, target_return)
+
+
+# =============================================================================
+# CONTACT FORM MODAL BUILDER
+# =============================================================================
+
+def build_contact_modal():
+    """Build the contact support modal overlay."""
+    return html.Div(
+        id="contact-modal",
+        children=[
+            html.Div([
+                html.Div([
+                    html.Span("📧", style={"fontSize": "28px"}),
+                    html.H3("Contact Support", style={"color": "#e2e8f0", "margin": "0", "fontWeight": "700"}),
+                ], style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "20px"}),
+
+                html.Div([
+                    html.Label("Your Name", style={"color": "#94a3b8", "fontSize": "12px",
+                                                     "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Input(id="contact-name", type="text", placeholder="Your name",
+                              style={"width": "100%", "padding": "10px 14px", "borderRadius": "10px",
+                                     "border": "1px solid rgba(99,102,241,0.2)", "background": "rgba(15,23,42,0.6)",
+                                     "color": "#e2e8f0", "fontSize": "14px", "boxSizing": "border-box"}),
+                ], style={"marginBottom": "14px"}),
+
+                html.Div([
+                    html.Label("Email", style={"color": "#94a3b8", "fontSize": "12px",
+                                                "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Input(id="contact-email", type="email", placeholder="you@example.com",
+                              style={"width": "100%", "padding": "10px 14px", "borderRadius": "10px",
+                                     "border": "1px solid rgba(99,102,241,0.2)", "background": "rgba(15,23,42,0.6)",
+                                     "color": "#e2e8f0", "fontSize": "14px", "boxSizing": "border-box"}),
+                ], style={"marginBottom": "14px"}),
+
+                html.Div([
+                    html.Label("Subject", style={"color": "#94a3b8", "fontSize": "12px",
+                                                   "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Dropdown(id="contact-subject", options=[
+                        {"label": "General Inquiry", "value": "General Inquiry"},
+                        {"label": "Technical Issue / Bug Report", "value": "Bug Report"},
+                        {"label": "Billing / Subscription", "value": "Billing"},
+                        {"label": "Feature Request", "value": "Feature Request"},
+                        {"label": "Partnership / Business", "value": "Partnership"},
+                    ], value="General Inquiry", clearable=False,
+                    style={"marginBottom": "0"}),
+                ], style={"marginBottom": "14px"}),
+
+                html.Div([
+                    html.Label("Message", style={"color": "#94a3b8", "fontSize": "12px",
+                                                   "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Textarea(id="contact-message", placeholder="Describe your issue or question...",
+                                 style={"width": "100%", "padding": "10px 14px", "borderRadius": "10px",
+                                        "border": "1px solid rgba(99,102,241,0.2)", "background": "rgba(15,23,42,0.6)",
+                                        "color": "#e2e8f0", "fontSize": "14px", "minHeight": "120px",
+                                        "boxSizing": "border-box", "fontFamily": "inherit"}),
+                ], style={"marginBottom": "20px"}),
+
+                html.Div([
+                    html.Button("📤 Send Message", id="contact-send-btn", n_clicks=0,
+                                style={"flex": "1", "padding": "12px", "borderRadius": "10px",
+                                       "background": "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                                       "color": "#fff", "border": "none", "fontSize": "14px",
+                                       "fontWeight": "700", "cursor": "pointer"}),
+                    html.Button("Cancel", id="contact-cancel-btn", n_clicks=0,
+                                style={"padding": "12px 24px", "borderRadius": "10px",
+                                       "background": "rgba(239,68,68,0.08)", "color": "#f87171",
+                                       "border": "1px solid rgba(239,68,68,0.2)", "fontSize": "14px",
+                                       "fontWeight": "600", "cursor": "pointer"}),
+                ], style={"display": "flex", "gap": "12px"}),
+
+                html.Div(id="contact-result", style={"marginTop": "12px"}),
+
+            ], style={
+                "maxWidth": "500px", "width": "90%", "padding": "32px",
+                "background": "rgba(15,23,42,0.95)", "backdropFilter": "blur(20px)",
+                "border": "1px solid rgba(99,102,241,0.15)", "borderRadius": "20px",
+                "boxShadow": "0 25px 80px rgba(0,0,0,0.6)",
+            }),
+        ],
+        style={"display": "none"},
+    )
+
+
+# =============================================================================
+# CONTACT FORM CALLBACKS
+# =============================================================================
+
+@callback(
+    Output("contact-modal", "style"),
+    Input("open-contact-btn", "n_clicks"),
+    Input("contact-cancel-btn", "n_clicks"),
+    Input("contact-send-btn", "n_clicks"),
+    prevent_initial_call=True,
+)
+def toggle_contact_modal(open_clicks, cancel_clicks, send_clicks):
+    triggered = ctx.triggered_id
+    if triggered == "open-contact-btn" and open_clicks:
+        return {
+            "position": "fixed", "top": "0", "left": "0", "width": "100%", "height": "100%",
+            "background": "rgba(0,0,0,0.7)", "backdropFilter": "blur(6px)",
+            "display": "flex", "alignItems": "center", "justifyContent": "center", "zIndex": "9999",
+        }
+    return {"display": "none"}
+
+
+@callback(
+    Output("contact-result", "children"),
+    Input("contact-send-btn", "n_clicks"),
+    State("contact-name", "value"),
+    State("contact-email", "value"),
+    State("contact-subject", "value"),
+    State("contact-message", "value"),
+    prevent_initial_call=True,
+)
+def send_contact_form(n_clicks, name, email, subject, message):
+    if not n_clicks:
+        raise PreventUpdate
+
+    if not name or not email or not message:
+        return html.Div("Please fill in all fields.", style={
+            "color": "#ef4444", "fontSize": "13px", "padding": "8px 12px",
+            "background": "rgba(239,68,68,0.08)", "borderRadius": "8px",
+            "border": "1px solid rgba(239,68,68,0.2)"})
+
+    # Send via email service
+    try:
+        if EMAIL_SERVICE_AVAILABLE:
+            from email_service import send_email
+            body = f"""
+            <h3>Contact Form Submission</h3>
+            <p><strong>From:</strong> {name} ({email})</p>
+            <p><strong>Subject:</strong> {subject}</p>
+            <p><strong>Message:</strong></p>
+            <p>{message.replace(chr(10), '<br>')}</p>
+            """
+            result = send_email("itubusinesshub@gmail.com", f"[Contact] {subject} — {name}", body)
+            if result.get("success"):
+                return html.Div("✅ Message sent! We'll get back to you soon.", style={
+                    "color": "#10b981", "fontSize": "13px", "padding": "8px 12px",
+                    "background": "rgba(16,185,129,0.08)", "borderRadius": "8px",
+                    "border": "1px solid rgba(16,185,129,0.2)"})
+    except Exception as e:
+        logger.warning(f"Contact form email failed: {e}")
+
+    # Fallback — save to Firestore
+    try:
+        if FIRESTORE_AVAILABLE and _firestore_db:
+            _firestore_db.collection("contact_submissions").add({
+                "name": name, "email": email, "subject": subject,
+                "message": message, "timestamp": datetime.now().isoformat(),
+            })
+            return html.Div("✅ Message received! We'll get back to you soon.", style={
+                "color": "#10b981", "fontSize": "13px", "padding": "8px 12px",
+                "background": "rgba(16,185,129,0.08)", "borderRadius": "8px",
+                "border": "1px solid rgba(16,185,129,0.2)"})
+    except Exception:
+        pass
+
+    return html.Div("✅ Thank you! Please also email us at itubusinesshub@gmail.com", style={
+        "color": "#10b981", "fontSize": "13px", "padding": "8px 12px",
+        "background": "rgba(16,185,129,0.08)", "borderRadius": "8px",
+        "border": "1px solid rgba(16,185,129,0.2)"})
 
 
 # =============================================================================

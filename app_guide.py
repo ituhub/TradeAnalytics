@@ -1,5 +1,5 @@
 """
-APP GUIDE PAGE — AI Trading Professional
+APP GUIDE PAGE — MarketLens AI
 ==========================================
 Interactive guide explaining platform features, AI models, 
 example prediction analysis, and usage instructions.
@@ -14,10 +14,10 @@ from datetime import datetime, timedelta
 def build_app_guide_page():
     """Build the complete app guide page."""
     return html.Div([
-        _section("🚀", "Welcome to AI Trading Professional",
+        _section("🚀", "Welcome to MarketLens AI",
             html.Div([
                 html.P(
-                    "AI Trading Professional is a production-grade platform combining "
+                    "MarketLens AI is a production-grade platform combining "
                     "8 advanced deep learning models with real-time market data to generate "
                     "actionable trading signals across stocks, forex, crypto, commodities, and indices.",
                     style={"color": "#cbd5e1", "fontSize": "15px", "lineHeight": "1.8", "marginBottom": "16px"},
@@ -43,7 +43,7 @@ def build_app_guide_page():
                     "Individual predictions are combined via inverse-MSE weighted averaging. "
                     "Models with lower historical error get higher weight — institutional-grade methodology."),
                 _step("4", "Signal & Strategy",
-                    "You receive: predicted price, BUY/HOLD/SELL signal, confidence score, "
+                    "You receive: predicted price, Bullish/Neutral/Bearish signal, confidence score, "
                     "stop loss/take profit levels, Kelly Criterion position sizing, 5-day forecast, and risk assessment."),
             ]),
         ),
@@ -92,7 +92,7 @@ def build_app_guide_page():
         _section("💎", "Platform Features",
             html.Div([
                 _feat("🤖 AI Prediction Engine",
-                    "Real-time predictions with 8-model ensemble, confidence scoring, and BUY/HOLD/SELL signals."),
+                    "Real-time predictions with 8-model ensemble, confidence scoring, and Bullish/Neutral/Bearish signals."),
                 _feat("📊 Advanced Analytics",
                     "Market regime detection (GMM), model drift monitoring (PSI/KS), SHAP explainability, "
                     "and alternative data (economic indicators, sentiment)."),

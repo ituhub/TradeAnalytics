@@ -42,7 +42,7 @@ SMTP_PORT = 587
 SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "")
 SMTP_APP_PASSWORD = os.environ.get("SMTP_APP_PASSWORD", "")
 
-PLATFORM_NAME = os.environ.get("PLATFORM_NAME", "AI Trading Professional")
+PLATFORM_NAME = os.environ.get("PLATFORM_NAME", "MarketLens AI")
 PLATFORM_URL = os.environ.get("PLATFORM_URL", "https://tradeanalytics-XXXXX.run.app")
 SUPPORT_EMAIL = os.environ.get("SUPPORT_EMAIL", SMTP_EMAIL)
 

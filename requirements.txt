@@ -1,84 +1,35 @@
-streamlit
-pandas
-numpy
-plotly
-requests
-prophet
-scikit-learn
-xgboost
-deap
-scikit-optimize
-textblob
-torch
-joblib
-transformers
-keras-tuner
-matplotlib
-stable-baselines3
-streamlit-option-menu
-ta
-uuid
-altair
-schedule
-shap
-vaderSentiment
-pytrends
-scipy
-python-dotenv
-gym
-nicegui
-nltk
-websockets
-aiohttp
-python-multipart
-fredapi
-python-dateutil
-yfinance
-cryptography
-dash
-dash-bootstrap-components
-google-cloud-firestore
-recharts
-aiohttp
-reflex
+# Core framework
+dash>=2.18
+dash-bootstrap-components>=1.6
+plotly>=5.24
+flask>=2.0
+gunicorn>=21.2
 
-# Additional required packages
-beautifulsoup4
-lxml
-pydantic
-pytz
-psutil
-tqdm
-statsmodels
-numba
-dill
-ujson
+# ML/AI
+torch==2.2.2
+numpy>=1.24,<2.0
+pandas>=2.0
+scikit-learn>=1.3
+scipy>=1.11
+xgboost>=2.0
+shap>=0.44
+statsmodels>=0.14
 
-# NiceGUI core dependencies
-fastapi
-uvicorn
-starlette
-vbuild
+# Data & APIs
+requests>=2.31
+fredapi>=0.5
+python-dotenv>=1.0
+python-dateutil>=2.8
 
-# Optional for authentication (if you use it)
-passlib
-python-jose
+# GCP
+google-cloud-storage>=2.14
+google-cloud-firestore>=2.16
 
-# Report generation packages
-reportlab
-openpyxl
-xlsxwriter
-fpdf2
+# Payments
+stripe>=7.0
 
-# Additional data processing
-tabulate
-jinja2
-
-# Enhanced visualization (optional)
-seaborn
-kaleido
-
-
-
-
-reflex==0.8.28.post1
+# Utilities
+joblib>=1.3
+tqdm>=4.65
+pytz>=2023.3
+websockets>=12.0

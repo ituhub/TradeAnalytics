@@ -25,21 +25,21 @@ print("🚀 Creating Stripe products and prices...\n")
 PLANS = [
     {
         "id": "starter",
-        "name": "AI Trading Pro — Starter",
+        "name": "MarketLens — Starter",
         "description": "3-model AI ensemble, 5 predictions/day, daily timeframe, 5 tickers",
         "monthly_cents": 4900,   # $49/mo
         "yearly_cents": 3900,    # $39/mo billed yearly
     },
     {
         "id": "professional",
-        "name": "AI Trading Pro — Professional",
+        "name": "MarketLens — Professional",
         "description": "Full 8-model ensemble, 50 predictions/day, all timeframes, all tickers, backtesting, SHAP",
         "monthly_cents": 12900,  # $129/mo
         "yearly_cents": 9900,    # $99/mo billed yearly
     },
     {
         "id": "institutional",
-        "name": "AI Trading Pro — Institutional",
+        "name": "MarketLens — Institutional",
         "description": "Unlimited predictions, portfolio optimization, API access, dedicated support",
         "monthly_cents": 34900,  # $349/mo
         "yearly_cents": 27900,   # $279/mo billed yearly

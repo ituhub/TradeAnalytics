@@ -1,5 +1,5 @@
 """
-AUTH, PAYMENTS & PLAN GATING — AI Trading Professional
+AUTH, PAYMENTS & PLAN GATING — MarketLens AI
 ========================================================================
 Handles:
   - User authentication (Firestore-backed, session cookies)
@@ -156,11 +156,10 @@ PLANS = {
 
 # Full ticker list (imported from app.py at runtime)
 ALL_TICKERS = [
-    "BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "DOGEUSD", "ADAUSD", "AVAXUSD", "DOTUSD",
-    "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "USDCHF", "NZDUSD", "EURGBP",
-    "XAUUSD", "XAGUSD", "CLUSD", "NGUSD",
-    "SPY", "QQQ", "DIA", "IWM",
-    "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META", "NFLX",
+    "ETHUSD", "SOLUSD", "BTCUSD",
+    "USDJPY",
+    "^GDAXI", "^GSPC", "^HSI",
+    "CC=F", "NG=F", "GC=F", "KC=F", "SI=F", "HG=F",
 ]
 
 
@@ -735,7 +734,7 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
                 "display": "flex", "alignItems": "center", "justifyContent": "center",
                 "margin": "0 auto 20px", "boxShadow": "0 8px 30px rgba(99,102,241,0.3)",
             }),
-            html.H1("AI Trading Professional", style={
+            html.H1("MarketLens AI", style={
                 "textAlign": "center", "fontSize": "1.6rem", "fontWeight": "800",
                 "color": "#e2e8f0", "margin": "0 0 4px 0",
             }),
@@ -1088,11 +1087,12 @@ def build_user_badge(user: Optional[Dict]):
             }),
         ], style={"display": "flex", "gap": "8px"}),
 
-        # Contact support link
+        # Contact support button
         html.Div([
-            html.A("📧 Support", href="mailto:itubusinesshub@gmail.com",
-                   style={"color": "#475569", "fontSize": "10px", "textDecoration": "none",
-                          "fontWeight": "500"}),
+            html.Button("📧 Contact Support", id="open-contact-btn", n_clicks=0,
+                        style={"color": "#475569", "fontSize": "10px", "background": "none",
+                               "border": "none", "cursor": "pointer", "fontWeight": "500",
+                               "textDecoration": "underline", "padding": "0"}),
         ], style={"textAlign": "center", "marginTop": "8px"}),
     ], style={
         "marginBottom": "16px", "padding": "14px",

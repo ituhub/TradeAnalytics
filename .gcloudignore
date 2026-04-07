@@ -1,0 +1,17 @@
+.git
+__pycache__
+*.pyc
+.env
+*.ipynb
+node_modules
+.venv
+venv
+models/
+saved_results/
+*.pkl
+*.pt
+*.pth
+*.h5
+*.joblib
+*.tar.gz
+data/users.json

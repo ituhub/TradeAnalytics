@@ -1,5 +1,5 @@
 """
-DISCLAIMER MODAL — AI Trading Professional
+DISCLAIMER MODAL — MarketLens AI
 ============================================
 Shows a legal disclaimer overlay after user signs in.
 User must accept to proceed. Acceptance is stored in Firestore user doc.
@@ -14,7 +14,7 @@ DISCLAIMER_TEXT = """
 
 <p style="margin-bottom:12px;"><strong style="color:#f59e0b;">⚠️ NOT FINANCIAL ADVICE</strong></p>
 
-<p>By using AI Trading Professional ("the Platform"), you acknowledge and agree to the following:</p>
+<p>By using MarketLens AI ("the Platform"), you acknowledge and agree to the following:</p>
 
 <p><strong style="color:#94a3b8;">1. No Investment Advice.</strong> The Platform provides AI-generated market analysis and predictions for <em>educational and informational purposes only</em>. Nothing on this Platform constitutes investment advice, financial advice, trading advice, or any other sort of advice. You should not treat any of the Platform's content as such.</p>
 
