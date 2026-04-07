@@ -2412,35 +2412,89 @@ def handle_upgrade_click(n_clicks, session_data):
 @callback(
     Output("login-form", "style"),
     Output("register-form", "style"),
+    Output("forgot-form", "style"),
     Output("auth-tab-login", "style"),
     Output("auth-tab-register", "style"),
     Input("auth-tab-login", "n_clicks"),
     Input("auth-tab-register", "n_clicks"),
+    Input("forgot-password-link", "n_clicks"),
+    Input("back-to-login-link", "n_clicks"),
     prevent_initial_call=True,
 )
-def toggle_auth_tabs(login_clicks, register_clicks):
+def toggle_auth_tabs(login_clicks, register_clicks, forgot_clicks, back_clicks):
     triggered = ctx.triggered_id
+    active_tab = {
+        "flex": "1", "padding": "10px", "border": "none", "borderRadius": "8px 0 0 8px",
+        "background": "rgba(99,102,241,0.15)", "color": "#a78bfa",
+        "fontSize": "13px", "fontWeight": "700", "cursor": "pointer",
+    }
+    inactive_tab = {
+        "flex": "1", "padding": "10px", "border": "none", "borderRadius": "0 8px 8px 0",
+        "background": "rgba(30,41,59,0.5)", "color": "#64748b",
+        "fontSize": "13px", "fontWeight": "600", "cursor": "pointer",
+    }
+    active_tab_r = {**active_tab, "borderRadius": "0 8px 8px 0"}
+    inactive_tab_l = {**inactive_tab, "borderRadius": "8px 0 0 8px"}
+
     if triggered == "auth-tab-register":
-        return (
-            {"display": "none"},
-            {"display": "block"},
-            {"flex": "1", "padding": "10px", "border": "none", "borderRadius": "8px 0 0 8px",
-             "background": "rgba(30,41,59,0.5)", "color": "#64748b",
-             "fontSize": "13px", "fontWeight": "600", "cursor": "pointer"},
-            {"flex": "1", "padding": "10px", "border": "none", "borderRadius": "0 8px 8px 0",
-             "background": "rgba(99,102,241,0.15)", "color": "#a78bfa",
-             "fontSize": "13px", "fontWeight": "700", "cursor": "pointer"},
-        )
-    return (
-        {"display": "block"},
-        {"display": "none"},
-        {"flex": "1", "padding": "10px", "border": "none", "borderRadius": "8px 0 0 8px",
-         "background": "rgba(99,102,241,0.15)", "color": "#a78bfa",
-         "fontSize": "13px", "fontWeight": "700", "cursor": "pointer"},
-        {"flex": "1", "padding": "10px", "border": "none", "borderRadius": "0 8px 8px 0",
-         "background": "rgba(30,41,59,0.5)", "color": "#64748b",
-         "fontSize": "13px", "fontWeight": "600", "cursor": "pointer"},
-    )
+        return {"display": "none"}, {"display": "block"}, {"display": "none"}, inactive_tab_l, active_tab_r
+    elif triggered in ("forgot-password-link",):
+        return {"display": "none"}, {"display": "none"}, {"display": "block"}, active_tab, inactive_tab
+    elif triggered in ("back-to-login-link", "auth-tab-login"):
+        return {"display": "block"}, {"display": "none"}, {"display": "none"}, active_tab, inactive_tab
+
+    return {"display": "block"}, {"display": "none"}, {"display": "none"}, active_tab, inactive_tab
+
+
+# ── PASSWORD RESET CALLBACK ─────────────────────────────────────────────────
+
+@callback(
+    Output("auth-error", "children", allow_duplicate=True),
+    Output("auth-error", "style", allow_duplicate=True),
+    Output("auth-success", "children", allow_duplicate=True),
+    Output("auth-success", "style", allow_duplicate=True),
+    Input("reset-password-btn", "n_clicks"),
+    State("reset-email", "value"),
+    State("reset-password", "value"),
+    State("reset-password-confirm", "value"),
+    prevent_initial_call=True,
+)
+def handle_password_reset(n_clicks, email, password, confirm_password):
+    if not n_clicks:
+        raise PreventUpdate
+
+    error_style = {
+        "color": "#ef4444", "fontSize": "13px", "textAlign": "center",
+        "marginBottom": "12px", "display": "block",
+        "background": "rgba(239,68,68,0.08)", "padding": "8px 12px",
+        "borderRadius": "8px", "border": "1px solid rgba(239,68,68,0.2)",
+    }
+    success_style = {
+        "color": "#10b981", "fontSize": "13px", "textAlign": "center",
+        "marginBottom": "12px", "display": "block",
+        "background": "rgba(16,185,129,0.08)", "padding": "8px 12px",
+        "borderRadius": "8px", "border": "1px solid rgba(16,185,129,0.2)",
+    }
+    hidden = {"display": "none"}
+
+    if not email or not password:
+        return "Please enter email and new password", error_style, "", hidden
+
+    if len(password) < 8:
+        return "Password must be at least 8 characters", error_style, "", hidden
+
+    if password != confirm_password:
+        return "Passwords do not match", error_style, "", hidden
+
+    if SAAS_AUTH_AVAILABLE:
+        from saas_auth import reset_user_password
+        result = reset_user_password(email, password)
+        if result.get("success"):
+            return "", hidden, "✅ Password reset successfully! You can now sign in.", success_style
+        else:
+            return result.get("error", "Reset failed"), error_style, "", hidden
+
+    return "Auth system not available", error_style, "", hidden
 
 
 # =============================================================================
@@ -2897,6 +2951,18 @@ def reoptimize_portfolio(n_clicks, assets, risk_tolerance, target_return_pct):
     target_return = (target_return_pct or 12) / 100.0
     return build_portfolio_page(assets, risk_tolerance, target_return)
 
+
+# =============================================================================
+# DOWNLOAD AI MODELS FROM GCS ON STARTUP
+# =============================================================================
+try:
+    from gcs_model_loader import ensure_models_available
+    logger.info("📥 Downloading AI models from GCS on startup...")
+    ensure_models_available()
+except ImportError:
+    logger.info("ℹ️ gcs_model_loader not available — models will train on demand")
+except Exception as e:
+    logger.warning(f"⚠️ GCS model download failed on startup: {e}")
 
 # =============================================================================
 # INITIALIZE AUTH & PAYMENTS SYSTEM

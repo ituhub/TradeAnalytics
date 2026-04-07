@@ -697,12 +697,33 @@ def register_webhook_route(server):
     logger.info("✅ Stripe webhook route registered at /webhook/stripe")
 
 
+def reset_user_password(email: str, new_password: str) -> Dict:
+    """Reset a user's password. Returns success/error dict."""
+    email = email.strip().lower()
+
+    if len(new_password) < 8:
+        return {"error": "Password must be at least 8 characters"}
+
+    user = get_user_by_email(email)
+    if not user:
+        # Don't reveal whether email exists for security
+        return {"error": "If an account exists with this email, the password has been reset"}
+
+    hashed_pw, salt = _hash_password(new_password)
+    user["password_hash"] = hashed_pw
+    user["password_salt"] = salt
+    _update_user(user)
+
+    logger.info(f"🔑 Password reset for {email}")
+    return {"success": True, "message": "Password reset successfully. You can now sign in."}
+
+
 # =============================================================================
 # DASH UI — LOGIN PAGE
 # =============================================================================
 
-def build_login_page(error_msg: str = ""):
-    """Build the login/register page layout."""
+def build_login_page(error_msg: str = "", success_msg: str = ""):
+    """Build the login/register/forgot-password page layout."""
     return html.Div([
         html.Div([
             # Logo
@@ -728,6 +749,14 @@ def build_login_page(error_msg: str = ""):
                 "marginBottom": "12px", "display": "block" if error_msg else "none",
                 "background": "rgba(239,68,68,0.08)", "padding": "8px 12px",
                 "borderRadius": "8px", "border": "1px solid rgba(239,68,68,0.2)",
+            }),
+
+            # Success message
+            html.Div(success_msg, id="auth-success", style={
+                "color": "#10b981", "fontSize": "13px", "textAlign": "center",
+                "marginBottom": "12px", "display": "block" if success_msg else "none",
+                "background": "rgba(16,185,129,0.08)", "padding": "8px 12px",
+                "borderRadius": "8px", "border": "1px solid rgba(16,185,129,0.2)",
             }),
 
             # Tab toggle: Login / Register
@@ -758,7 +787,15 @@ def build_login_page(error_msg: str = ""):
                                                    "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
                     dcc.Input(id="login-password", type="password", placeholder="••••••••",
                               style=_input_style()),
-                ], style={"marginBottom": "24px"}),
+                ], style={"marginBottom": "8px"}),
+                # Forgot password link
+                html.Div([
+                    html.A("Forgot your password?", id="forgot-password-link", href="#",
+                           n_clicks=0, style={
+                        "color": "#6366f1", "fontSize": "12px", "textDecoration": "none",
+                        "fontWeight": "500",
+                    }),
+                ], style={"textAlign": "right", "marginBottom": "20px"}),
                 html.Button("Sign In →", id="login-btn", n_clicks=0, style=_primary_btn_style()),
             ], id="login-form"),
 
@@ -785,6 +822,44 @@ def build_login_page(error_msg: str = ""):
                 html.Button("Create Account →", id="register-btn", n_clicks=0, style=_primary_btn_style()),
             ], id="register-form", style={"display": "none"}),
 
+            # Forgot password form (hidden by default)
+            html.Div([
+                html.Div([
+                    html.Div("🔐", style={"fontSize": "28px", "marginBottom": "8px"}),
+                    html.H3("Reset Password", style={"color": "#e2e8f0", "margin": "0 0 4px 0",
+                                                       "fontSize": "1.1rem", "fontWeight": "700"}),
+                    html.P("Enter your email and new password below", style={
+                        "color": "#64748b", "fontSize": "12px", "margin": "0 0 20px 0",
+                    }),
+                ], style={"textAlign": "center"}),
+                html.Div([
+                    html.Label("Email", style={"color": "#94a3b8", "fontSize": "12px",
+                                                "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Input(id="reset-email", type="email", placeholder="you@example.com",
+                              style=_input_style()),
+                ], style={"marginBottom": "16px"}),
+                html.Div([
+                    html.Label("New Password", style={"color": "#94a3b8", "fontSize": "12px",
+                                                       "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Input(id="reset-password", type="password", placeholder="Min 8 characters",
+                              style=_input_style()),
+                ], style={"marginBottom": "16px"}),
+                html.Div([
+                    html.Label("Confirm New Password", style={"color": "#94a3b8", "fontSize": "12px",
+                                                               "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Input(id="reset-password-confirm", type="password", placeholder="Confirm password",
+                              style=_input_style()),
+                ], style={"marginBottom": "24px"}),
+                html.Button("Reset Password →", id="reset-password-btn", n_clicks=0, style=_primary_btn_style()),
+                html.Div([
+                    html.A("← Back to Sign In", id="back-to-login-link", href="#",
+                           n_clicks=0, style={
+                        "color": "#6366f1", "fontSize": "12px", "textDecoration": "none",
+                        "fontWeight": "600",
+                    }),
+                ], style={"textAlign": "center", "marginTop": "16px"}),
+            ], id="forgot-form", style={"display": "none"}),
+
             # Divider
             html.Div(style={"height": "1px", "background": "linear-gradient(90deg, transparent, rgba(99,102,241,0.2), transparent)",
                             "margin": "24px 0"}),
@@ -796,7 +871,23 @@ def build_login_page(error_msg: str = ""):
                     "color": "#6366f1", "fontSize": "13px", "fontWeight": "600",
                     "textDecoration": "none",
                 }),
-            ], style={"textAlign": "center"}),
+            ], style={"textAlign": "center", "marginBottom": "16px"}),
+
+            # Contact support
+            html.Div([
+                html.Div("Need help? ", style={"color": "#475569", "fontSize": "12px", "display": "inline"}),
+                html.A("Contact Support", href="mailto:itubusinesshub@gmail.com",
+                       style={"color": "#06b6d4", "fontSize": "12px", "fontWeight": "600",
+                              "textDecoration": "none"}),
+                html.Span(" • ", style={"color": "#334155", "fontSize": "12px"}),
+                html.A("Terms of Service", href="#", style={
+                    "color": "#475569", "fontSize": "11px", "textDecoration": "none",
+                }),
+                html.Span(" • ", style={"color": "#334155", "fontSize": "12px"}),
+                html.A("Privacy Policy", href="#", style={
+                    "color": "#475569", "fontSize": "11px", "textDecoration": "none",
+                }),
+            ], style={"textAlign": "center", "marginTop": "4px"}),
 
         ], style={
             "maxWidth": "400px", "margin": "60px auto", "padding": "36px 32px",
@@ -893,6 +984,33 @@ def build_pricing_page(current_plan: str = "free"):
             "display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(280px, 1fr))",
             "gap": "20px", "maxWidth": "1000px", "margin": "0 auto",
         }),
+        # Contact support & FAQ footer
+        html.Div([
+            html.Div(style={"height": "1px", "background": "linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent)",
+                            "margin": "32px 0 20px 0"}),
+            html.Div([
+                html.Div("💎", style={"fontSize": "20px", "marginBottom": "8px"}),
+                html.P("Need a custom plan or have questions?", style={
+                    "color": "#94a3b8", "fontSize": "14px", "margin": "0 0 12px 0",
+                }),
+                html.A("📧 Contact Sales — itubusinesshub@gmail.com",
+                       href="mailto:itubusinesshub@gmail.com?subject=AI%20Trading%20Pro%20-%20Plan%20Inquiry",
+                       style={
+                    "color": "#06b6d4", "fontSize": "13px", "fontWeight": "600",
+                    "textDecoration": "none", "display": "inline-block",
+                    "padding": "8px 20px", "borderRadius": "8px",
+                    "border": "1px solid rgba(6,182,212,0.3)",
+                    "background": "rgba(6,182,212,0.08)",
+                }),
+            ], style={"textAlign": "center"}),
+            html.Div([
+                html.Span("🔒 Secure payments via Stripe", style={"color": "#475569", "fontSize": "11px"}),
+                html.Span(" • ", style={"color": "#334155"}),
+                html.Span("Cancel anytime", style={"color": "#475569", "fontSize": "11px"}),
+                html.Span(" • ", style={"color": "#334155"}),
+                html.Span("14-day money-back guarantee", style={"color": "#475569", "fontSize": "11px"}),
+            ], style={"textAlign": "center", "marginTop": "16px"}),
+        ]),
     ])
 
 
@@ -969,6 +1087,13 @@ def build_user_badge(user: Optional[Dict]):
                 "fontSize": "11px", "fontWeight": "600", "cursor": "pointer",
             }),
         ], style={"display": "flex", "gap": "8px"}),
+
+        # Contact support link
+        html.Div([
+            html.A("📧 Support", href="mailto:itubusinesshub@gmail.com",
+                   style={"color": "#475569", "fontSize": "10px", "textDecoration": "none",
+                          "fontWeight": "500"}),
+        ], style={"textAlign": "center", "marginTop": "8px"}),
     ], style={
         "marginBottom": "16px", "padding": "14px",
         "background": "rgba(15,23,42,0.4)", "borderRadius": "12px",

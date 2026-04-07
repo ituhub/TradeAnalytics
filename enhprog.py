@@ -3192,8 +3192,19 @@ def load_trained_models(ticker):
         model_path = Path("models")
 
         if not model_path.exists():
-            logger.warning(f"Model directory {model_path} does not exist")
-            return {}, {}
+            model_path.mkdir(exist_ok=True)
+
+        # Check if model files exist locally; if not, try downloading from GCS
+        config_file_check = model_path / f"{safe_ticker}_config.pkl"
+        if not config_file_check.exists():
+            try:
+                from gcs_model_loader import download_ticker_models
+                logger.info(f"📥 Models not found locally for {ticker}, downloading from GCS...")
+                download_ticker_models(ticker)
+            except ImportError:
+                logger.info("gcs_model_loader not available — using local models only")
+            except Exception as e:
+                logger.warning(f"GCS model download failed for {ticker}: {e}")
 
         # Load configuration
         config_file = model_path / f"{safe_ticker}_config.pkl"
