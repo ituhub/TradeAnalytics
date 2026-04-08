@@ -2023,6 +2023,13 @@ server = app.server
 
 # ── LAYOUT ──────────────────────────────────────────────────────────────────
 
+# Forward declaration — full definition below
+def build_contact_modal(): return html.Div(id="contact-modal", style={"display":"none"})
+
+
+# Forward declaration — full definition below
+
+
 app.layout = html.Div([
     # Hidden stores
     dcc.Store(id="prediction-store", data=None),
@@ -2110,6 +2117,7 @@ def _build_main_dashboard(user=None):
                         {"label": "", "value": "backtesting"},
                         {"label": "", "value": "ftmo_dashboard"},
                         {"label": "", "value": "model_training"},
+                        {"label": "", "value": "subscription"},
                         {"label": "", "value": "app_guide"},
                         {"label": "", "value": "admin_panel"},
                     ],
@@ -2137,6 +2145,7 @@ def _build_main_dashboard(user=None):
                         ("💼", "Portfolio Mgmt", "portfolio_mgmt"),
                         ("📈", "Backtesting", "backtesting"),
                         ("🧠", "Model Training", "model_training"),
+                        ("💳", "Subscription", "subscription"),
                         ("📖", "App Guide", "app_guide"),
                     ] + ([
                         ("🏦", "FTMO Dashboard", "ftmo_dashboard"),
@@ -2706,6 +2715,8 @@ def route_page(page, prediction, ticker, ftmo_state, session_data):
         content = build_ftmo_page(ftmo_state or {})
     elif page == "model_training":
         content = build_model_training_page(ticker or "BTCUSD")
+    elif page == "subscription":
+        content = build_pricing_page(get_user_plan(user).get("name", "free") if user else "free")
     elif page == "app_guide":
         content = build_app_guide_page()
     elif page == "admin_panel":
@@ -2941,7 +2952,7 @@ def run_prediction(n_clicks, ticker, models, timeframe, mtf_timeframes, session_
 
 # ── NAV BUTTON CALLBACKS ─────────────────────────────────────────────────────
 
-NAV_PAGES = ["ai_prediction", "advanced_analytics", "portfolio_mgmt", "backtesting",
+NAV_PAGES = ["ai_prediction", "advanced_analytics", "portfolio_mgmt", "backtesting", "subscription",
              "ftmo_dashboard", "model_training", "app_guide", "admin_panel"]
 
 @callback(
