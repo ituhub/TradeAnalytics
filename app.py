@@ -2038,7 +2038,7 @@ app.layout = html.Div([
     dcc.Store(id="user-session", storage_type="local", data=None),
     dcc.Store(id="disclaimer-store", storage_type="local", data={"accepted": False}),
     dcc.Store(id="contact-form-store", data={"visible": False}),
-    dcc.Location(id="url", refresh=False),
+    dcc.Location(id="url", refresh=True),
 
     # Contact form modal (global, always present)
     build_contact_modal(),
@@ -2253,7 +2253,6 @@ def _build_main_dashboard(user=None):
 
             # Dynamic page content
             html.Div(id="page-content"),
-
             # Footer
             html.Div([
                 html.Hr(style={"borderColor": "rgba(99,102,241,0.08)"}),
@@ -2261,9 +2260,9 @@ def _build_main_dashboard(user=None):
                     html.Span("MarketLens AI — Dash Edition", style={"color": "#475569", "fontSize": "12px"}),
                     html.Span(" · ", style={"color": "#334155"}),
                     html.Span("For research purposes only", style={"color": "#475569", "fontSize": "12px"}),
-                ], style={"textAlign": "center", "padding": "16px 0"}),
                     html.Span(" · ", style={"color": "#334155"}),
                     html.Button("📧 Contact Support", id="open-contact-btn", n_clicks=0, style={"color": "#06b6d4", "fontSize": "12px", "background": "none", "border": "none", "cursor": "pointer", "fontWeight": "600", "padding": "0"}),
+                ], style={"textAlign": "center", "padding": "16px 0"}),
             ]),
 
         ], style={"flex": "1", "padding": "24px 32px", "maxWidth": "1200px"}),
