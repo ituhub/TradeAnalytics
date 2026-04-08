@@ -3175,12 +3175,13 @@ def build_contact_modal():
     Output("contact-modal", "style"),
     Input("open-contact-btn", "n_clicks"),
     Input("contact-cancel-btn", "n_clicks"),
+    Input("open-contact-btn-pricing", "n_clicks"),
     Input("contact-send-btn", "n_clicks"),
     prevent_initial_call=True,
 )
-def toggle_contact_modal(open_clicks, cancel_clicks, send_clicks):
+def toggle_contact_modal(open_clicks, cancel_clicks, open_clicks_pricing, send_clicks):
     triggered = ctx.triggered_id
-    if triggered == "open-contact-btn" and open_clicks:
+    if triggered in ("open-contact-btn", "open-contact-btn-pricing") and (open_clicks or open_clicks_pricing):
         return {
             "position": "fixed", "top": "0", "left": "0", "width": "100%", "height": "100%",
             "background": "rgba(0,0,0,0.7)", "backdropFilter": "blur(6px)",

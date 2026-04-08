@@ -969,7 +969,7 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
             # Contact support
             html.Div([
                 html.Div("Need help? ", style={"color": "#475569", "fontSize": "12px", "display": "inline"}),
-                html.A("Contact Support", href="mailto:itubusinesshub@gmail.com",
+                html.Button("Contact Support", id="open-contact-btn", n_clicks=0,
                        style={"color": "#06b6d4", "fontSize": "12px", "fontWeight": "600",
                               "textDecoration": "none"}),
                 html.Span(" • ", style={"color": "#334155", "fontSize": "12px"}),
@@ -1285,7 +1285,7 @@ def build_user_badge(user: Optional[Dict]):
 
         # Contact support button
         html.Div([
-            html.Button("📧 Contact Support", id="open-contact-btn", n_clicks=0,
+            html.Button("📧 Contact Support", id="open-contact-btn-pricing", n_clicks=0,
                         style={"color": "#475569", "fontSize": "10px", "background": "none",
                                "border": "none", "cursor": "pointer", "fontWeight": "500",
                                "textDecoration": "underline", "padding": "0"}),
