@@ -965,6 +965,7 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
                 "padding": "10px 16px", "borderRadius": "10px", "marginBottom": "16px",
                 "background": "rgba(16,185,129,0.06)", "border": "1px solid rgba(16,185,129,0.12)",
             }),
+                html.Div([
                 html.A("Terms of Service", href="#", style={
                     "color": "#475569", "fontSize": "11px", "textDecoration": "none",
                 }),
