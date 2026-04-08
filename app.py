@@ -2039,6 +2039,7 @@ app.layout = html.Div([
     dcc.Store(id="disclaimer-store", storage_type="local", data={"accepted": False}),
     dcc.Store(id="contact-form-store", data={"visible": False}),
     dcc.Location(id="url", refresh=True),
+    dcc.Store(id="redirect-store", data=None),
 
     # Contact form modal (global, always present)
     build_contact_modal(),
@@ -3330,6 +3331,20 @@ except ImportError:
 # =============================================================================
 # RUN
 # =============================================================================
+
+app.clientside_callback(
+    """
+    function(url) {
+        if (url && url.startsWith("http")) {
+            window.location.href = url;
+        }
+        return window.dash_clientside.no_update;
+    }
+    """,
+    Output("url", "href", allow_duplicate=True),
+    Input("redirect-store", "data"),
+    prevent_initial_call=True
+)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=8050)
