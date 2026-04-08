@@ -2177,16 +2177,6 @@ def _build_main_dashboard(user=None):
 
                 html.Div(style={"height": "1px", "background": "linear-gradient(90deg, transparent, rgba(99,102,241,0.2), transparent)",
                                 "margin": "0 0 20px 0"}),
-
-                # Analysis Timeframe
-                html.Div("ANALYSIS TIMEFRAME", className="sidebar-section-label"),
-                dcc.Dropdown(
-                    id="timeframe-dropdown",
-                    options=tf_options,
-                    value="1day",
-                    clearable=False,
-                    style={"marginBottom": "12px"},
-                ),
                 html.Div([
                     html.Div([
                         html.Span("⏱️", style={"fontSize": "12px"}),
@@ -2272,6 +2262,8 @@ def _build_main_dashboard(user=None):
                     html.Span(" · ", style={"color": "#334155"}),
                     html.Span("For research purposes only", style={"color": "#475569", "fontSize": "12px"}),
                 ], style={"textAlign": "center", "padding": "16px 0"}),
+                    html.Span(" · ", style={"color": "#334155"}),
+                    html.Button("📧 Contact Support", id="open-contact-btn", n_clicks=0, style={"color": "#06b6d4", "fontSize": "12px", "background": "none", "border": "none", "cursor": "pointer", "fontWeight": "600", "padding": "0"}),
             ]),
 
         ], style={"flex": "1", "padding": "24px 32px", "maxWidth": "1200px"}),
