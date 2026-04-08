@@ -39,6 +39,9 @@ try:
         get_user_plan, get_allowed_tickers, get_allowed_timeframes,
         get_models_limit, can_access_feature, check_prediction_limit,
         record_prediction, get_plan_badge_info, PLANS, ALL_TICKERS as AUTH_TICKERS,
+        # Discovery plan helpers
+        get_discovery_days_remaining, is_discovery_active, has_used_discovery,
+        DISCOVERY_DURATION_DAYS,
         # Admin
         is_admin,
         # Stripe
@@ -2030,6 +2033,9 @@ app.layout = html.Div([
     dcc.Store(id="contact-form-store", data={"visible": False}),
     dcc.Location(id="url", refresh=False),
 
+    # Contact form modal (global, always present)
+    build_contact_modal(),
+
     # Auth-gated container: login page OR main dashboard
     html.Div(id="app-container"),
 
@@ -2263,71 +2269,11 @@ def _build_main_dashboard(user=None):
 
     ], style={"display": "flex", "minHeight": "100vh", "background": "#0a0e1a"})
 
-    # Wrap in disclaimer-gated container with contact modal
+    # Wrap in disclaimer-gated container
     return html.Div([
-        # Contact form modal
-        html.Div(
-            id="contact-modal",
-            children=[
-                html.Div([
-                    html.Div([
-                        html.Span("📧", style={"fontSize": "28px"}),
-                        html.H3("Contact Support", style={"color": "#e2e8f0", "margin": "0", "fontWeight": "700"}),
-                    ], style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "20px"}),
-                    html.Div([
-                        html.Label("Your Name", style={"color": "#94a3b8", "fontSize": "12px", "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
-                        dcc.Input(id="contact-name", type="text", placeholder="Your name",
-                                  style={"width": "100%", "padding": "10px 14px", "borderRadius": "10px",
-                                         "border": "1px solid rgba(99,102,241,0.2)", "background": "rgba(15,23,42,0.6)",
-                                         "color": "#e2e8f0", "fontSize": "14px", "boxSizing": "border-box"}),
-                    ], style={"marginBottom": "14px"}),
-                    html.Div([
-                        html.Label("Email", style={"color": "#94a3b8", "fontSize": "12px", "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
-                        dcc.Input(id="contact-email", type="email", placeholder="you@example.com",
-                                  style={"width": "100%", "padding": "10px 14px", "borderRadius": "10px",
-                                         "border": "1px solid rgba(99,102,241,0.2)", "background": "rgba(15,23,42,0.6)",
-                                         "color": "#e2e8f0", "fontSize": "14px", "boxSizing": "border-box"}),
-                    ], style={"marginBottom": "14px"}),
-                    html.Div([
-                        html.Label("Subject", style={"color": "#94a3b8", "fontSize": "12px", "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
-                        dcc.Dropdown(id="contact-subject", options=[
-                            {"label": "General Inquiry", "value": "General Inquiry"},
-                            {"label": "Technical Issue", "value": "Bug Report"},
-                            {"label": "Billing / Subscription", "value": "Billing"},
-                            {"label": "Feature Request", "value": "Feature Request"},
-                        ], value="General Inquiry", clearable=False),
-                    ], style={"marginBottom": "14px"}),
-                    html.Div([
-                        html.Label("Message", style={"color": "#94a3b8", "fontSize": "12px", "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
-                        dcc.Textarea(id="contact-message", placeholder="Describe your issue or question...",
-                                     style={"width": "100%", "padding": "10px 14px", "borderRadius": "10px",
-                                            "border": "1px solid rgba(99,102,241,0.2)", "background": "rgba(15,23,42,0.6)",
-                                            "color": "#e2e8f0", "fontSize": "14px", "minHeight": "120px",
-                                            "boxSizing": "border-box", "fontFamily": "inherit"}),
-                    ], style={"marginBottom": "20px"}),
-                    html.Div([
-                        html.Button("📤 Send Message", id="contact-send-btn", n_clicks=0,
-                                    style={"flex": "1", "padding": "12px", "borderRadius": "10px",
-                                           "background": "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                                           "color": "#fff", "border": "none", "fontSize": "14px",
-                                           "fontWeight": "700", "cursor": "pointer"}),
-                        html.Button("Cancel", id="contact-cancel-btn", n_clicks=0,
-                                    style={"padding": "12px 24px", "borderRadius": "10px",
-                                           "background": "rgba(239,68,68,0.08)", "color": "#f87171",
-                                           "border": "1px solid rgba(239,68,68,0.2)", "fontSize": "14px",
-                                           "fontWeight": "600", "cursor": "pointer"}),
-                    ], style={"display": "flex", "gap": "12px"}),
-                    html.Div(id="contact-result", style={"marginTop": "12px"}),
-                ], style={"maxWidth": "500px", "width": "90%", "padding": "32px",
-                          "background": "rgba(15,23,42,0.95)", "backdropFilter": "blur(20px)",
-                          "border": "1px solid rgba(99,102,241,0.15)", "borderRadius": "20px",
-                          "boxShadow": "0 25px 80px rgba(0,0,0,0.6)"}),
-            ],
-            style={"display": "none"},
-        ),
-        # Disclaimer overlay
+        # Disclaimer overlay (hidden when accepted)
         html.Div(id="disclaimer-container", children=build_disclaimer_overlay()),
-        # Main content
+        # Main content (blurred until disclaimer accepted)
         html.Div(id="main-app-content", children=dashboard),
     ])
 
@@ -2721,7 +2667,7 @@ def route_page(page, prediction, ticker, ftmo_state, session_data):
 
     # ── Feature gating by plan ───────────────────────────────────────
     feature_map = {
-        "portfolio_mgmt": ("portfolio", "Portfolio Optimization", "institutional"),
+        "portfolio_mgmt": ("portfolio", "Portfolio Optimization", "enterprise"),
         "backtesting": ("backtesting", "Walk-Forward Backtesting", "professional"),
         "ftmo_dashboard": ("ftmo_dashboard", "FTMO Dashboard", "professional"),
         "model_training": ("model_training", "Model Training Center", "professional"),
@@ -3126,6 +3072,88 @@ def reoptimize_portfolio(n_clicks, assets, risk_tolerance, target_return_pct):
     risk_tolerance = risk_tolerance or "Moderate"
     target_return = (target_return_pct or 12) / 100.0
     return build_portfolio_page(assets, risk_tolerance, target_return)
+
+
+# =============================================================================
+# CONTACT FORM MODAL BUILDER
+# =============================================================================
+
+def build_contact_modal():
+    """Build the contact support modal overlay."""
+    return html.Div(
+        id="contact-modal",
+        children=[
+            html.Div([
+                html.Div([
+                    html.Span("📧", style={"fontSize": "28px"}),
+                    html.H3("Contact Support", style={"color": "#e2e8f0", "margin": "0", "fontWeight": "700"}),
+                ], style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "20px"}),
+
+                html.Div([
+                    html.Label("Your Name", style={"color": "#94a3b8", "fontSize": "12px",
+                                                     "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Input(id="contact-name", type="text", placeholder="Your name",
+                              style={"width": "100%", "padding": "10px 14px", "borderRadius": "10px",
+                                     "border": "1px solid rgba(99,102,241,0.2)", "background": "rgba(15,23,42,0.6)",
+                                     "color": "#e2e8f0", "fontSize": "14px", "boxSizing": "border-box"}),
+                ], style={"marginBottom": "14px"}),
+
+                html.Div([
+                    html.Label("Email", style={"color": "#94a3b8", "fontSize": "12px",
+                                                "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Input(id="contact-email", type="email", placeholder="you@example.com",
+                              style={"width": "100%", "padding": "10px 14px", "borderRadius": "10px",
+                                     "border": "1px solid rgba(99,102,241,0.2)", "background": "rgba(15,23,42,0.6)",
+                                     "color": "#e2e8f0", "fontSize": "14px", "boxSizing": "border-box"}),
+                ], style={"marginBottom": "14px"}),
+
+                html.Div([
+                    html.Label("Subject", style={"color": "#94a3b8", "fontSize": "12px",
+                                                   "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Dropdown(id="contact-subject", options=[
+                        {"label": "General Inquiry", "value": "General Inquiry"},
+                        {"label": "Technical Issue / Bug Report", "value": "Bug Report"},
+                        {"label": "Billing / Subscription", "value": "Billing"},
+                        {"label": "Feature Request", "value": "Feature Request"},
+                        {"label": "Partnership / Business", "value": "Partnership"},
+                    ], value="General Inquiry", clearable=False,
+                    style={"marginBottom": "0"}),
+                ], style={"marginBottom": "14px"}),
+
+                html.Div([
+                    html.Label("Message", style={"color": "#94a3b8", "fontSize": "12px",
+                                                   "fontWeight": "600", "marginBottom": "6px", "display": "block"}),
+                    dcc.Textarea(id="contact-message", placeholder="Describe your issue or question...",
+                                 style={"width": "100%", "padding": "10px 14px", "borderRadius": "10px",
+                                        "border": "1px solid rgba(99,102,241,0.2)", "background": "rgba(15,23,42,0.6)",
+                                        "color": "#e2e8f0", "fontSize": "14px", "minHeight": "120px",
+                                        "boxSizing": "border-box", "fontFamily": "inherit"}),
+                ], style={"marginBottom": "20px"}),
+
+                html.Div([
+                    html.Button("📤 Send Message", id="contact-send-btn", n_clicks=0,
+                                style={"flex": "1", "padding": "12px", "borderRadius": "10px",
+                                       "background": "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                                       "color": "#fff", "border": "none", "fontSize": "14px",
+                                       "fontWeight": "700", "cursor": "pointer"}),
+                    html.Button("Cancel", id="contact-cancel-btn", n_clicks=0,
+                                style={"padding": "12px 24px", "borderRadius": "10px",
+                                       "background": "rgba(239,68,68,0.08)", "color": "#f87171",
+                                       "border": "1px solid rgba(239,68,68,0.2)", "fontSize": "14px",
+                                       "fontWeight": "600", "cursor": "pointer"}),
+                ], style={"display": "flex", "gap": "12px"}),
+
+                html.Div(id="contact-result", style={"marginTop": "12px"}),
+
+            ], style={
+                "maxWidth": "500px", "width": "90%", "padding": "32px",
+                "background": "rgba(15,23,42,0.95)", "backdropFilter": "blur(20px)",
+                "border": "1px solid rgba(99,102,241,0.15)", "borderRadius": "20px",
+                "boxShadow": "0 25px 80px rgba(0,0,0,0.6)",
+            }),
+        ],
+        style={"display": "none"},
+    )
 
 
 # =============================================================================

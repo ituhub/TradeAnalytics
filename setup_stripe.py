@@ -1,11 +1,14 @@
 """
-STRIPE PRODUCTS & PRICES SETUP — Run once to create your subscription plans
+STRIPE PRODUCTS & PRICES SETUP — MarketLens AI
 =============================================================================
 Usage:
     export STRIPE_SECRET_KEY=sk_test_...
     python setup_stripe.py
 
-Creates 3 products × 2 prices (monthly + yearly) = 6 Stripe Price IDs.
+Creates 2 products × 2 prices (monthly + yearly) = 4 Stripe Price IDs.
+Enterprise tier is contact-only (no Stripe product needed).
+Currency: EUR
+
 Prints the environment variables to add to your .env or Cloud Run config.
 =============================================================================
 """
@@ -20,29 +23,22 @@ if not stripe.api_key:
     print("   export STRIPE_SECRET_KEY=sk_test_YOUR_KEY_HERE")
     exit(1)
 
-print("🚀 Creating Stripe products and prices...\n")
+print("🚀 Creating MarketLens AI Stripe products and prices (EUR)...\n")
 
 PLANS = [
     {
         "id": "starter",
-        "name": "MarketLens — Starter",
-        "description": "3-model AI ensemble, 5 predictions/day, daily timeframe, 5 tickers",
-        "monthly_cents": 4900,   # $49/mo
-        "yearly_cents": 3900,    # $39/mo billed yearly
+        "name": "MarketLens AI — Starter",
+        "description": "4-model AI ensemble, 10 predictions/day, 3 timeframes, 7 tickers, backtesting, SHAP, regime detection, drift alerts, MTF analysis",
+        "monthly_cents": 3900,   # €39/mo
+        "yearly_cents": 2900,    # €29/mo billed yearly (€348/year)
     },
     {
         "id": "professional",
-        "name": "MarketLens — Professional",
-        "description": "Full 8-model ensemble, 50 predictions/day, all timeframes, all tickers, backtesting, SHAP",
-        "monthly_cents": 12900,  # $129/mo
-        "yearly_cents": 9900,    # $99/mo billed yearly
-    },
-    {
-        "id": "institutional",
-        "name": "MarketLens — Institutional",
-        "description": "Unlimited predictions, portfolio optimization, API access, dedicated support",
-        "monthly_cents": 34900,  # $349/mo
-        "yearly_cents": 27900,   # $279/mo billed yearly
+        "name": "MarketLens AI — Professional",
+        "description": "Full 8-model ensemble, 25 predictions/day, all timeframes, all tickers, full backtesting suite, FTMO dashboard, model training",
+        "monthly_cents": 8900,   # €89/mo
+        "yearly_cents": 6900,    # €69/mo billed yearly (€828/year)
     },
 ]
 
@@ -62,16 +58,16 @@ for plan in PLANS:
     monthly_price = stripe.Price.create(
         product=product.id,
         unit_amount=plan["monthly_cents"],
-        currency="usd",
+        currency="eur",
         recurring={"interval": "month"},
         metadata={"plan_id": plan["id"], "billing": "monthly"},
     )
 
-    # Yearly price (billed monthly amount × 12 as yearly total)
+    # Yearly price (total yearly amount)
     yearly_price = stripe.Price.create(
         product=product.id,
-        unit_amount=plan["yearly_cents"] * 12,  # total yearly amount
-        currency="usd",
+        unit_amount=plan["yearly_cents"] * 12,  # total yearly amount in cents
+        currency="eur",
         recurring={"interval": "year"},
         metadata={"plan_id": plan["id"], "billing": "yearly"},
     )
@@ -80,8 +76,8 @@ for plan in PLANS:
     env_lines.append(f"STRIPE_{env_key_prefix}_MONTHLY={monthly_price.id}")
     env_lines.append(f"STRIPE_{env_key_prefix}_YEARLY={yearly_price.id}")
 
-    print(f"   ✅ Monthly: {monthly_price.id} (${plan['monthly_cents']/100:.0f}/mo)")
-    print(f"   ✅ Yearly:  {yearly_price.id} (${plan['yearly_cents']/100:.0f}/mo billed yearly)")
+    print(f"   ✅ Monthly: {monthly_price.id} (€{plan['monthly_cents']/100:.0f}/mo)")
+    print(f"   ✅ Yearly:  {yearly_price.id} (€{plan['yearly_cents']/100:.0f}/mo billed yearly)")
     print()
 
 print("=" * 60)
@@ -95,6 +91,10 @@ print("  STRIPE_SECRET_KEY=sk_live_YOUR_KEY")
 print("  STRIPE_PUBLISHABLE_KEY=pk_live_YOUR_KEY")
 print("  STRIPE_WEBHOOK_SECRET=whsec_YOUR_WEBHOOK_SECRET")
 print("  APP_DOMAIN=https://your-domain.com")
+print()
+print("=" * 60)
+print("📝 Note: Enterprise tier is contact-only — no Stripe product needed.")
+print("   Enterprise clients are manually onboarded via itubusinesshub@gmail.com")
 print()
 print("✅ Done! Products created in Stripe Dashboard.")
 print("   Next: Set up webhook endpoint at /webhook/stripe in Stripe Dashboard")

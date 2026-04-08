@@ -1599,15 +1599,15 @@ def build_admin_page():
         make_metric_card("Total Users", f"{total_users}", None, "#93c5fd", "#3b82f6"),
         make_metric_card("Free Users", f"{free_users}", None, "#64748b", "#64748b"),
         make_metric_card("Paid Users", f"{paid_users}", None, "#10b981", "#10b981"),
-        make_metric_card("Revenue/mo", f"${_est_revenue(plans_count):,.0f}", None, "#f59e0b", "#f59e0b"),
+        make_metric_card("Revenue/mo", f"€{_est_revenue(plans_count):,.0f}", None, "#f59e0b", "#f59e0b"),
     ], className="ecard-grid ecard-grid-4")
 
     # ── Users table ──────────────────────────────────────────────
     user_rows = []
     for u in users_list[:50]:
         plan = u.get("plan", "free")
-        pc = {"free": "#64748b", "starter": "#06b6d4", "professional": "#8b5cf6",
-              "institutional": "#f59e0b"}.get(plan, "#64748b")
+        pc = {"free": "#64748b", "discovery": "#10b981", "starter": "#06b6d4", "professional": "#8b5cf6",
+              "enterprise": "#f59e0b"}.get(plan, "#64748b")
         user_rows.append(html.Tr([
             html.Td(u.get("name", "—"), style={"padding": "10px", "color": "#e2e8f0",
                                                   "fontSize": "13px", "fontWeight": "500"}),
@@ -1638,8 +1638,8 @@ def build_admin_page():
     if plans_count:
         plan_names = [k.title() for k in plans_count.keys()]
         plan_vals = list(plans_count.values())
-        plan_colors = [{"free": "#64748b", "starter": "#06b6d4", "professional": "#8b5cf6",
-                        "institutional": "#f59e0b"}.get(k, "#6366f1") for k in plans_count.keys()]
+        plan_colors = [{"free": "#64748b", "discovery": "#10b981", "starter": "#06b6d4", "professional": "#8b5cf6",
+                        "enterprise": "#f59e0b"}.get(k, "#6366f1") for k in plans_count.keys()]
         fig_plans = go.Figure(go.Pie(
             labels=plan_names, values=plan_vals,
             marker=dict(colors=plan_colors),
@@ -1706,5 +1706,5 @@ def build_admin_page():
 
 def _est_revenue(plans_count):
     """Estimate monthly revenue from plan distribution."""
-    prices = {"free": 0, "starter": 49, "professional": 129, "institutional": 349}
+    prices = {"free": 0, "discovery": 0, "starter": 39, "professional": 89, "enterprise": 0}
     return sum(prices.get(p, 0) * c for p, c in plans_count.items())

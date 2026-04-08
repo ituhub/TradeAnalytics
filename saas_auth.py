@@ -4,6 +4,7 @@ AUTH, PAYMENTS & PLAN GATING — MarketLens AI
 Handles:
   - User authentication (Firestore-backed, session cookies)
   - Stripe subscription billing (3 tiers + annual)
+  - Discovery plan: 14-day auto-assigned welcome plan on registration
   - Plan-based feature gating (tickers, timeframes, predictions/day)
   - Login / Register / Pricing page layouts for Dash
   - Usage tracking and rate limiting
@@ -65,6 +66,8 @@ else:
 # PLAN DEFINITIONS
 # =============================================================================
 
+DISCOVERY_DURATION_DAYS = 14  # How long the Discovery plan lasts after registration
+
 PLANS = {
     "free": {
         "name": "Free Demo",
@@ -82,35 +85,57 @@ PLANS = {
             "ftmo_dashboard": False,
             "model_training": False,
         },
-        "models_limit": 3,  # max models in ensemble
+        "models_limit": 2,  # downgraded from 3 to make Discovery feel like an upgrade
         "stripe_price_monthly": None,
         "stripe_price_yearly": None,
     },
-    "starter": {
-        "name": "Starter",
+    "discovery": {
+        "name": "Discovery",
         "predictions_per_day": 5,
-        "tickers": ["BTCUSD", "ETHUSD", "SPY", "AAPL", "EURUSD"],
-        "timeframes": ["1day"],
+        "tickers": ["BTCUSD", "ETHUSD", "SOLUSD", "SPY", "AAPL", "EURUSD", "GC=F"],
+        "timeframes": ["1hour", "4hour", "1day"],
         "features": {
-            "backtesting": False,
+            "backtesting": True,
             "portfolio": False,
-            "shap_explanations": False,
-            "regime_detection": False,
+            "shap_explanations": True,
+            "regime_detection": True,
             "drift_alerts": False,
             "mtf_analysis": False,
             "api_access": False,
             "ftmo_dashboard": False,
             "model_training": False,
         },
-        "models_limit": 3,
+        "models_limit": 4,
+        "stripe_price_monthly": None,
+        "stripe_price_yearly": None,
+        "is_promo": True,  # marks this as a non-purchasable promotional plan
+        "duration_days": DISCOVERY_DURATION_DAYS,
+    },
+    "starter": {
+        "name": "Starter",
+        "predictions_per_day": 10,
+        "tickers": ["BTCUSD", "ETHUSD", "SOLUSD", "SPY", "AAPL", "EURUSD", "GC=F"],
+        "timeframes": ["1hour", "4hour", "1day"],
+        "features": {
+            "backtesting": True,
+            "portfolio": False,
+            "shap_explanations": True,
+            "regime_detection": True,
+            "drift_alerts": True,
+            "mtf_analysis": True,
+            "api_access": False,
+            "ftmo_dashboard": False,
+            "model_training": False,
+        },
+        "models_limit": 4,
         "stripe_price_monthly": os.environ.get("STRIPE_STARTER_MONTHLY", ""),
         "stripe_price_yearly": os.environ.get("STRIPE_STARTER_YEARLY", ""),
-        "price_display": {"monthly": 49, "yearly": 39},
+        "price_display": {"monthly": 39, "yearly": 29},
         "trial_days": 7,
     },
     "professional": {
         "name": "Professional",
-        "predictions_per_day": 50,
+        "predictions_per_day": 25,
         "tickers": "all",  # special value = all tickers
         "timeframes": ["15min", "1hour", "4hour", "1day"],
         "features": {
@@ -123,15 +148,17 @@ PLANS = {
             "api_access": False,
             "ftmo_dashboard": True,
             "model_training": True,
+            "monte_carlo": False,
+            "custom_tickers": False,
         },
         "models_limit": 8,
         "stripe_price_monthly": os.environ.get("STRIPE_PRO_MONTHLY", ""),
         "stripe_price_yearly": os.environ.get("STRIPE_PRO_YEARLY", ""),
-        "price_display": {"monthly": 129, "yearly": 99},
+        "price_display": {"monthly": 89, "yearly": 69},
         "trial_days": 14,
     },
-    "institutional": {
-        "name": "Institutional",
+    "enterprise": {
+        "name": "Enterprise",
         "predictions_per_day": 9999,  # effectively unlimited
         "tickers": "all",
         "timeframes": ["15min", "1hour", "4hour", "1day"],
@@ -145,12 +172,14 @@ PLANS = {
             "api_access": True,
             "ftmo_dashboard": True,
             "model_training": True,
+            "monte_carlo": True,
+            "custom_tickers": True,
         },
         "models_limit": 8,
-        "stripe_price_monthly": os.environ.get("STRIPE_INST_MONTHLY", ""),
-        "stripe_price_yearly": os.environ.get("STRIPE_INST_YEARLY", ""),
-        "price_display": {"monthly": 349, "yearly": 279},
-        "trial_days": 14,
+        "stripe_price_monthly": None,  # custom pricing only
+        "stripe_price_yearly": None,
+        "price_display": None,  # no fixed price — contact support
+        "is_contact_only": True,  # marks this as non-purchasable
     },
 }
 
@@ -233,7 +262,7 @@ def create_user(email: str, password: str, name: str = "") -> Dict:
         "name": name or email.split("@")[0],
         "password_hash": hashed_pw,
         "password_salt": salt,
-        "plan": "free",
+        "plan": "discovery",
         "stripe_customer_id": None,
         "stripe_subscription_id": None,
         "created_at": datetime.now().isoformat(),
@@ -244,6 +273,10 @@ def create_user(email: str, password: str, name: str = "") -> Dict:
         "session_token": None,
         "trial_started": None,
         "trial_ends": None,
+        # Discovery plan auto-assignment
+        "discovery_started": datetime.now().isoformat(),
+        "discovery_ends": (datetime.now() + timedelta(days=DISCOVERY_DURATION_DAYS)).isoformat(),
+        "discovery_used": True,  # prevents re-activation
     }
 
     # Create Stripe customer
@@ -384,11 +417,56 @@ def logout_user(user_id: str):
 # =============================================================================
 
 def get_user_plan(user: Optional[Dict]) -> Dict:
-    """Get the plan config for a user."""
+    """Get the plan config for a user. Auto-expires Discovery plan."""
     if not user:
         return PLANS["free"]
     plan_id = user.get("plan", "free")
+
+    # Auto-expire Discovery plan
+    if plan_id == "discovery":
+        discovery_ends = user.get("discovery_ends")
+        if discovery_ends:
+            try:
+                end_dt = datetime.fromisoformat(discovery_ends)
+                if datetime.now() > end_dt:
+                    # Discovery expired — downgrade to free
+                    user["plan"] = "free"
+                    _update_user(user)
+                    logger.info(f"🔻 Discovery expired for {user.get('email')} → free")
+                    return PLANS["free"]
+            except (ValueError, TypeError):
+                pass
+
     return PLANS.get(plan_id, PLANS["free"])
+
+
+def get_discovery_days_remaining(user: Optional[Dict]) -> int:
+    """Get number of days left on Discovery plan. Returns 0 if not on Discovery or expired."""
+    if not user or user.get("plan") != "discovery":
+        return 0
+    discovery_ends = user.get("discovery_ends")
+    if not discovery_ends:
+        return 0
+    try:
+        end_dt = datetime.fromisoformat(discovery_ends)
+        remaining = (end_dt - datetime.now()).days
+        return max(0, remaining)
+    except (ValueError, TypeError):
+        return 0
+
+
+def is_discovery_active(user: Optional[Dict]) -> bool:
+    """Check if user is currently on an active Discovery plan."""
+    if not user or user.get("plan") != "discovery":
+        return False
+    return get_discovery_days_remaining(user) > 0
+
+
+def has_used_discovery(user: Optional[Dict]) -> bool:
+    """Check if user has already used their Discovery period (prevents re-activation)."""
+    if not user:
+        return False
+    return bool(user.get("discovery_used", False))
 
 
 def get_allowed_tickers(user: Optional[Dict]) -> list:
@@ -463,9 +541,10 @@ def get_plan_badge_info(user: Optional[Dict]) -> Dict:
     plan_id = user.get("plan", "free") if user else "free"
     colors = {
         "free": {"bg": "rgba(100,116,139,0.12)", "border": "#64748b", "text": "#94a3b8"},
+        "discovery": {"bg": "rgba(16,185,129,0.12)", "border": "#10b981", "text": "#34d399"},
         "starter": {"bg": "rgba(6,182,212,0.12)", "border": "#06b6d4", "text": "#22d3ee"},
         "professional": {"bg": "rgba(139,92,246,0.12)", "border": "#8b5cf6", "text": "#a78bfa"},
-        "institutional": {"bg": "rgba(245,158,11,0.12)", "border": "#f59e0b", "text": "#fcd34d"},
+        "enterprise": {"bg": "rgba(245,158,11,0.12)", "border": "#f59e0b", "text": "#fcd34d"},
     }
     c = colors.get(plan_id, colors["free"])
     return {
@@ -870,7 +949,22 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
                     "color": "#6366f1", "fontSize": "13px", "fontWeight": "600",
                     "textDecoration": "none",
                 }),
-            ], style={"textAlign": "center", "marginBottom": "16px"}),
+            ], style={"textAlign": "center", "marginBottom": "8px"}),
+
+            # Discovery promo badge
+            html.Div([
+                html.Div([
+                    html.Span("🎁 ", style={"fontSize": "16px"}),
+                    html.Span("Create an account → get 14 days of Discovery access FREE", style={
+                        "color": "#34d399", "fontSize": "12px", "fontWeight": "600",
+                    }),
+                ], style={"display": "flex", "alignItems": "center", "justifyContent": "center", "gap": "4px"}),
+                html.Div("4 AI models • 5 predictions/day • Backtesting • Advanced analytics",
+                         style={"color": "#64748b", "fontSize": "11px", "textAlign": "center", "marginTop": "4px"}),
+            ], style={
+                "padding": "10px 16px", "borderRadius": "10px", "marginBottom": "16px",
+                "background": "rgba(16,185,129,0.06)", "border": "1px solid rgba(16,185,129,0.12)",
+            }),
 
             # Contact support
             html.Div([
@@ -904,22 +998,41 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
 
 def build_pricing_page(current_plan: str = "free"):
     """Build the pricing/upgrade page."""
+
+    # Discovery info banner (shown if user is on Discovery or free-after-discovery)
+    discovery_banner = html.Div([
+        html.Div([
+            html.Span("🎁 ", style={"fontSize": "20px"}),
+            html.Span("Discovery Plan — Included Free With Every Account", style={
+                "color": "#34d399", "fontSize": "15px", "fontWeight": "700",
+            }),
+        ], style={"display": "flex", "alignItems": "center", "justifyContent": "center", "gap": "6px",
+                   "marginBottom": "8px"}),
+        html.Div(
+            f"14 days of enhanced access: 4 AI models, 5 predictions/day, backtesting, SHAP explanations, "
+            f"regime detection, 7 tickers, and 3 timeframes — all free upon registration.",
+            style={"color": "#94a3b8", "fontSize": "13px", "textAlign": "center", "maxWidth": "600px",
+                   "margin": "0 auto", "lineHeight": "1.5"},
+        ),
+    ], style={
+        "padding": "20px 24px", "borderRadius": "14px", "marginBottom": "28px",
+        "background": "rgba(16,185,129,0.05)", "border": "1px solid rgba(16,185,129,0.12)",
+        "maxWidth": "700px", "margin": "0 auto 28px auto",
+    })
+
     plans_display = [
-        ("starter", "⚡", "Starter", "$49", "$39", "For retail traders getting started", "#06b6d4", [
-            "3-model AI ensemble", "5 predictions/day", "Daily timeframe",
-            "5 tickers", "Basic risk metrics", "5-day forecast",
-            "Trading strategy", "Email support",
+        ("starter", "⚡", "Starter", "€39", "€29", "For retail traders getting started", "#06b6d4", [
+            "4-model AI ensemble", "10 predictions/day", "3 timeframes (1H, 4H, 1D)",
+            "7 tickers (crypto, forex, stocks, gold)", "Backtesting",
+            "SHAP explanations", "Regime detection",
+            "Drift alerts", "Multi-TF analysis", "Email support",
         ]),
-        ("professional", "🔥", "Professional", "$129", "$99", "Full AI power for serious traders", "#8b5cf6", [
-            "Full 8-model ensemble", "50 predictions/day", "All timeframes (15m–1D)",
-            "All 36 tickers", "Advanced risk metrics", "Walk-forward backtesting",
-            "SHAP explanations", "Regime detection", "Multi-TF consensus",
-            "FTMO dashboard", "Model training", "Priority support",
-        ]),
-        ("institutional", "🏛️", "Institutional", "$349", "$279", "For prop firms & power users", "#f59e0b", [
-            "Everything in Professional", "Unlimited predictions", "Portfolio optimization",
-            "REST API access", "Monte Carlo simulation", "Custom tickers",
-            "Webhook alerts", "Dedicated support", "Onboarding call",
+        ("professional", "🔥", "Professional", "€89", "€69", "Full AI power for serious traders", "#8b5cf6", [
+            "Full 8-model ensemble", "25 predictions/day", "All timeframes (15m–1D)",
+            "All 13+ tickers", "Walk-forward backtesting",
+            "SHAP explanations", "Regime detection & drift alerts",
+            "Multi-TF consensus analysis", "FTMO dashboard",
+            "Model training", "Priority support",
         ]),
     ]
 
@@ -944,7 +1057,7 @@ def build_pricing_page(current_plan: str = "free"):
                 html.Span(m_price, style={"fontSize": "2.2rem", "fontWeight": "800", "color": color}),
                 html.Span("/mo", style={"color": "#64748b", "fontSize": "14px"}),
             ]),
-            html.Div(f"or {y_price}/mo billed yearly (save 20%)", style={
+            html.Div(f"or {y_price}/mo billed yearly (save ~25%)", style={
                 "color": "#10b981", "fontSize": "11px", "marginBottom": "16px",
             }),
             html.Div(style={"borderTop": "1px solid rgba(99,102,241,0.12)", "paddingTop": "14px"}),
@@ -974,11 +1087,66 @@ def build_pricing_page(current_plan: str = "free"):
         })
         cards.append(card)
 
+    # Enterprise card — Contact Support (no price, no Stripe checkout)
+    enterprise_color = "#f59e0b"
+    enterprise_features = [
+        "Everything in Professional",
+        "Unlimited predictions",
+        "Portfolio optimization (Black-Litterman)",
+        "Monte Carlo simulation",
+        "Custom tickers on request",
+        "REST API access",
+        "Custom system development",
+        "Dedicated support & onboarding",
+        "White-label options",
+    ]
+    enterprise_card = html.Div([
+        html.Div(html.Span("CUSTOM", style={
+            "fontSize": "10px", "fontWeight": "700", "letterSpacing": "1px",
+            "color": "#fcd34d", "background": "rgba(245,158,11,0.15)",
+            "padding": "4px 14px", "borderRadius": "20px",
+            "border": "1px solid rgba(245,158,11,0.3)",
+        }), style={"textAlign": "center", "marginBottom": "12px"}),
+        html.Div("🏛️", style={"fontSize": "32px", "marginBottom": "8px"}),
+        html.H3("Enterprise", style={"color": "#e2e8f0", "margin": "0 0 4px 0", "fontSize": "1.3rem"}),
+        html.P("For prop firms, funds & custom development", style={
+            "color": "#64748b", "fontSize": "12px", "margin": "0 0 16px 0",
+        }),
+        html.Div([
+            html.Span("Custom", style={"fontSize": "2.2rem", "fontWeight": "800", "color": enterprise_color}),
+        ]),
+        html.Div("Tailored pricing based on your needs", style={
+            "color": "#94a3b8", "fontSize": "11px", "marginBottom": "16px",
+        }),
+        html.Div(style={"borderTop": "1px solid rgba(99,102,241,0.12)", "paddingTop": "14px"}),
+        *[html.Div([
+            html.Span("✓ ", style={"color": enterprise_color}),
+            html.Span(f, style={"color": "#94a3b8", "fontSize": "13px"}),
+        ], style={"marginBottom": "6px"}) for f in enterprise_features],
+        html.A(
+            "📧 Contact Support",
+            href="mailto:itubusinesshub@gmail.com?subject=MarketLens%20AI%20-%20Enterprise%20Inquiry",
+            style={
+                "display": "block", "width": "100%", "padding": "12px", "borderRadius": "10px",
+                "border": "none", "marginTop": "20px", "fontSize": "14px",
+                "fontWeight": "700", "cursor": "pointer", "textAlign": "center",
+                "background": f"linear-gradient(135deg, {enterprise_color}, #d97706)",
+                "color": "#fff", "textDecoration": "none", "boxSizing": "border-box",
+            },
+        ),
+    ], style={
+        "background": "rgba(15,23,42,0.6)",
+        "border": "1px solid rgba(245,158,11,0.2)",
+        "borderRadius": "16px", "padding": "28px 24px", "position": "relative",
+    })
+    cards.append(enterprise_card)
+
     return html.Div([
         html.H2("Choose Your Plan", style={"textAlign": "center", "color": "#e2e8f0", "marginBottom": "8px"}),
         html.P("All plans include a free trial. Cancel anytime.", style={
-            "textAlign": "center", "color": "#64748b", "fontSize": "14px", "marginBottom": "32px",
+            "textAlign": "center", "color": "#64748b", "fontSize": "14px", "marginBottom": "24px",
         }),
+        discovery_banner,
         html.Div(cards, style={
             "display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(280px, 1fr))",
             "gap": "20px", "maxWidth": "1000px", "margin": "0 auto",
@@ -993,7 +1161,7 @@ def build_pricing_page(current_plan: str = "free"):
                     "color": "#94a3b8", "fontSize": "14px", "margin": "0 0 12px 0",
                 }),
                 html.A("📧 Contact Sales — itubusinesshub@gmail.com",
-                       href="mailto:itubusinesshub@gmail.com?subject=AI%20Trading%20Pro%20-%20Plan%20Inquiry",
+                       href="mailto:itubusinesshub@gmail.com?subject=MarketLens%20AI%20-%20Plan%20Inquiry",
                        style={
                     "color": "#06b6d4", "fontSize": "13px", "fontWeight": "600",
                     "textDecoration": "none", "display": "inline-block",
@@ -1034,6 +1202,34 @@ def build_user_badge(user: Optional[Dict]):
     allowed, used, limit = check_prediction_limit(user)
 
     return html.Div([
+        # Discovery countdown banner (only shown during Discovery period)
+        *([html.Div([
+            html.Div([
+                html.Span("🎁 ", style={"fontSize": "14px"}),
+                html.Span(f"Discovery: {get_discovery_days_remaining(user)} days left",
+                           style={"color": "#34d399", "fontSize": "11px", "fontWeight": "700"}),
+            ], style={"display": "flex", "alignItems": "center", "gap": "4px", "marginBottom": "4px"}),
+            html.Div(
+                "Upgrade now to keep backtesting & advanced analytics"
+                if get_discovery_days_remaining(user) <= 5
+                else "Enjoy your full Discovery access!",
+                style={"color": "#64748b", "fontSize": "10px"}
+            ),
+            # Progress bar showing time remaining
+            html.Div([
+                html.Div(style={
+                    "width": f"{max(5, get_discovery_days_remaining(user) / DISCOVERY_DURATION_DAYS * 100):.0f}%",
+                    "height": "3px", "borderRadius": "2px",
+                    "background": "linear-gradient(90deg, #10b981, #34d399)",
+                    "transition": "width 0.3s",
+                }),
+            ], style={"height": "3px", "background": "rgba(16,185,129,0.1)", "borderRadius": "2px",
+                       "marginTop": "6px"}),
+        ], style={
+            "padding": "10px 12px", "borderRadius": "10px", "marginBottom": "10px",
+            "background": "rgba(16,185,129,0.06)", "border": "1px solid rgba(16,185,129,0.15)",
+        })] if user.get("plan") == "discovery" else []),
+
         # User info row
         html.Div([
             html.Div(user.get("name", "User")[0].upper(), style={
@@ -1074,7 +1270,7 @@ def build_user_badge(user: Optional[Dict]):
 
         # Upgrade / Manage buttons
         html.Div([
-            html.Button("Upgrade" if user.get("plan") != "institutional" else "Manage",
+            html.Button("Upgrade" if user.get("plan") != "enterprise" else "Manage",
                          id="sidebar-upgrade-btn", n_clicks=0, style={
                 "flex": "1", "padding": "6px", "borderRadius": "6px", "border": "none",
                 "background": "rgba(99,102,241,0.12)", "color": "#a78bfa",
@@ -1108,13 +1304,15 @@ def build_user_badge(user: Optional[Dict]):
 def build_upgrade_prompt(feature_name: str, required_plan: str = "professional"):
     """Build a UI prompt when user tries to access a gated feature."""
     plan = PLANS.get(required_plan, PLANS["professional"])
-    price = plan.get("price_display", {}).get("monthly", 129)
+    price = plan.get("price_display", {}).get("monthly", 89) if plan.get("price_display") else None
+
+    price_text = f" (€{price}/mo)" if price else ""
 
     return html.Div([
         html.Div("🔒", style={"fontSize": "48px", "marginBottom": "16px"}),
         html.H3(f"{feature_name} requires {plan['name']}",
                  style={"color": "#e2e8f0", "fontWeight": "700", "margin": "0 0 8px 0"}),
-        html.P(f"Upgrade to the {plan['name']} plan (${price}/mo) to unlock this feature.",
+        html.P(f"Upgrade to the {plan['name']} plan{price_text} to unlock this feature.",
                style={"color": "#64748b", "fontSize": "14px", "margin": "0 0 20px 0"}),
         html.Button(f"Upgrade to {plan['name']} →", id="prompt-upgrade-btn", n_clicks=0, style={
             "padding": "12px 28px", "borderRadius": "10px", "border": "none",
