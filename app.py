@@ -2048,6 +2048,12 @@ app = dash.Dash(
     suppress_callback_exceptions=True,
     title="MarketLens AI",
     update_title="Analyzing...",
+    meta_tags=[
+        {"name": "viewport", "content": "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"},
+        {"name": "apple-mobile-web-app-capable", "content": "yes"},
+        {"name": "apple-mobile-web-app-status-bar-style", "content": "black-translucent"},
+        {"name": "theme-color", "content": "#0a0e1a"},
+    ],
 )
 server = app.server
 

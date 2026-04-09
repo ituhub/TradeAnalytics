@@ -1,0 +1,527 @@
+/* ══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — MarketLens AI
+   ──────────────────────────────────────────────────────────────
+   Place in: assets/responsive.css
+   Dash auto-loads all CSS files from the assets/ directory.
+   This file ONLY contains responsive overrides — no base styles.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Viewport meta (injected via Dash index_string or meta_tags) ── */
+/* Ensure app.py has: app = Dash(..., meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}]) */
+
+/* ══════════════════════════════════════════════════════════════
+   LANDING PAGE — Stack vertically on mobile
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+    /* Landing + Login split layout → stack vertically */
+    #app-container > div[style*="flexDirection"] {
+        flex-direction: column !important;
+    }
+
+    /* Login panel — full width on mobile */
+    #app-container > div > div:last-child {
+        width: 100% !important;
+        min-width: unset !important;
+        border-left: none !important;
+        border-top: 1px solid rgba(99,102,241,0.06) !important;
+        padding: 20px 16px !important;
+    }
+
+    /* Landing side — full width */
+    #app-container > div > div:first-child {
+        width: 100% !important;
+        min-width: unset !important;
+    }
+
+    /* Landing inner scroll container */
+    #app-container > div > div:first-child > div {
+        padding: 24px 18px !important;
+        max-height: unset !important;
+        overflow-y: visible !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Tighter padding on small phones */
+    #app-container > div > div:first-child > div {
+        padding: 20px 14px !important;
+    }
+    #app-container > div > div:last-child {
+        padding: 16px 12px !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR — Collapsible on tablet/mobile
+   ══════════════════════════════════════════════════════════════ */
+
+/* Tablet: narrower sidebar */
+@media (max-width: 1024px) {
+    .sidebar-container {
+        width: 240px !important;
+    }
+    .sidebar-nav-btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+    }
+    .sidebar-logo {
+        font-size: 16px !important;
+    }
+}
+
+/* Mobile: sidebar becomes top-scrollable horizontal strip or stacks above content */
+@media (max-width: 768px) {
+    /* Main dashboard layout — stack vertically */
+    .sidebar-container {
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        position: relative !important;
+        overflow-y: visible !important;
+        overflow-x: hidden !important;
+    }
+
+    .sidebar-wrap {
+        min-height: auto !important;
+        padding: 14px 14px 10px !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(99,102,241,0.08) !important;
+        flex-direction: column !important;
+    }
+
+    /* Compact logo area on mobile */
+    .sidebar-logo {
+        font-size: 15px !important;
+    }
+    .sidebar-sub {
+        font-size: 9px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* Navigation — horizontal scroll on mobile */
+    .sidebar-section-label {
+        font-size: 8px !important;
+        margin-bottom: 6px !important;
+    }
+
+    /* Hide navigation text labels on small screens — show as compact grid */
+    .sidebar-nav-btn {
+        padding: 8px 10px !important;
+        font-size: 11px !important;
+        gap: 6px !important;
+    }
+
+    /* Quick select buttons — smaller */
+    .sidebar-quick-btn {
+        padding: 4px 10px !important;
+        font-size: 10px !important;
+    }
+
+    /* MTF checklist — compact */
+    .sidebar-mtf-checklist label {
+        font-size: 11px !important;
+        padding: 2px 4px !important;
+    }
+
+    /* Model checklist — hide on mobile (admin feature) */
+    .sidebar-model-checklist {
+        display: none !important;
+    }
+
+    /* Status block — compact */
+    .sidebar-status-block {
+        padding: 8px 10px !important;
+    }
+    .sidebar-status-block li {
+        font-size: 11px !important;
+    }
+}
+
+/* Very small phones — ultra compact sidebar */
+@media (max-width: 480px) {
+    .sidebar-wrap {
+        padding: 10px 10px 8px !important;
+    }
+    .sidebar-nav-btn {
+        padding: 7px 8px !important;
+        font-size: 10.5px !important;
+        border-radius: 8px !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER CARD — Responsive
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .header-card {
+        padding: 18px 16px !important;
+        border-radius: 14px !important;
+        margin-bottom: 16px !important;
+    }
+    .header-title {
+        font-size: 1.3rem !important;
+    }
+    .header-subtitle {
+        font-size: 0.8rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-card {
+        padding: 14px 12px !important;
+        border-radius: 12px !important;
+    }
+    .header-title {
+        font-size: 1.1rem !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   CONTENT AREA — Responsive padding & grids
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    /* Main content area */
+    .dash-graph {
+        margin: 0 !important;
+    }
+
+    /* Cards — less padding */
+    .ecard {
+        padding: 16px !important;
+        border-radius: 12px !important;
+        margin-bottom: 12px !important;
+    }
+    .ecard:hover {
+        transform: none !important;  /* Disable hover lift on touch */
+    }
+
+    /* Hero card */
+    .ecard-hero {
+        padding: 24px 18px !important;
+        border-radius: 16px !important;
+    }
+    .ecard-hero .hero-title {
+        font-size: 1.3rem !important;
+    }
+    .ecard-hero .hero-icon {
+        font-size: 40px !important;
+    }
+
+    /* Metric cards */
+    .ecard-metric {
+        padding: 14px !important;
+        border-radius: 12px !important;
+    }
+    .ecard-metric .metric-value {
+        font-size: 1.2rem !important;
+    }
+    .ecard-metric .metric-label {
+        font-size: 10px !important;
+    }
+
+    /* Risk cards */
+    .ecard-risk {
+        padding: 14px !important;
+    }
+    .ecard-risk .risk-value {
+        font-size: 1.2rem !important;
+    }
+
+    /* Trade level */
+    .ecard-trade-level {
+        padding: 12px 14px !important;
+    }
+    .ecard-trade-level .level-price {
+        font-size: 1rem !important;
+    }
+
+    /* Forecast day */
+    .ecard-forecast-day {
+        padding: 12px !important;
+    }
+    .ecard-forecast-day .day-price {
+        font-size: 1.05rem !important;
+    }
+
+    /* Source banner */
+    .ecard-source-banner {
+        padding: 14px 16px !important;
+    }
+    .ecard-source-banner h3 {
+        font-size: 0.9rem !important;
+    }
+
+    /* Section headers */
+    .ecard-section-header {
+        margin: 20px 0 12px 0 !important;
+    }
+    .ecard-section-header .section-title {
+        font-size: 0.95rem !important;
+    }
+
+    /* Scenario cards */
+    .scenario-card {
+        padding: 14px !important;
+    }
+    .scenario-card .scenario-value {
+        font-size: 1.15rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .ecard {
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+    .ecard-hero {
+        padding: 18px 14px !important;
+    }
+    .ecard-hero .hero-title {
+        font-size: 1.1rem !important;
+    }
+    .ecard-metric .metric-value {
+        font-size: 1rem !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   GRID OVERRIDES — Single column on mobile
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .ecard-grid-2 {
+        grid-template-columns: 1fr !important;
+    }
+    .ecard-grid-3 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .ecard-grid-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .ecard-grid-5 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Status cards row — 2 per row on tablet */
+    .ecard-grid-4 .status-card {
+        min-width: 0 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .ecard-grid-2,
+    .ecard-grid-3,
+    .ecard-grid-4,
+    .ecard-grid-5 {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   PLOTLY CHARTS — Responsive
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .js-plotly-plot, .plotly {
+        width: 100% !important;
+    }
+    .js-plotly-plot .plotly .main-svg {
+        width: 100% !important;
+    }
+    /* Make chart containers respect width */
+    .dash-graph > div {
+        width: 100% !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   TABS — Mobile-friendly
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .tab-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+    .tab-container .tab {
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .tab-container .tab {
+        padding: 7px 10px !important;
+        font-size: 11px !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   BUTTONS — Touch-friendly sizing
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    /* Minimum touch target 44px (Apple HIG) */
+    button, .dash-dropdown-select, input[type="text"], input[type="email"],
+    input[type="password"], .Select-control {
+        min-height: 44px !important;
+    }
+
+    /* Predict button */
+    #predict-btn {
+        padding: 16px 24px !important;
+        font-size: 14px !important;
+        border-radius: 12px !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   DROPDOWN — Better mobile styling
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .Select-control {
+        background: rgba(15,23,42,0.7) !important;
+    }
+    .Select-value-label {
+        color: #e2e8f0 !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+    }
+    .Select-placeholder {
+        color: #64748b !important;
+        font-size: 14px !important;
+    }
+    .Select-menu-outer {
+        background: #0f1629 !important;
+        border: 1px solid rgba(99,102,241,0.2) !important;
+        border-radius: 10px !important;
+        z-index: 9999 !important;
+    }
+    .Select-option {
+        padding: 12px 14px !important;
+        font-size: 14px !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   TICKER BAR — Wrap on mobile
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    /* Badge pills should wrap nicely */
+    div[style*="flexWrap: wrap"] {
+        gap: 6px !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   PRICING PAGE — Single column on mobile
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    /* Plan cards grid → single column */
+    div[style*="gridTemplateColumns: repeat(auto-fit"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   CONTACT MODAL — Full-screen on mobile
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    #contact-modal > div > div {
+        width: 95% !important;
+        max-width: none !important;
+        margin: 20px auto !important;
+        border-radius: 16px !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   PAYMENT SUCCESS PAGE — Responsive
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+    div[style*="maxWidth: 480px"][style*="margin: 80px auto"] {
+        margin: 40px 16px !important;
+        padding: 32px 20px !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   GENERAL MOBILE POLISH
+   ══════════════════════════════════════════════════════════════ */
+
+/* Prevent horizontal overflow on all screens */
+html, body, #react-entry-point, #_dash-app-content {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Better text rendering on mobile */
+@media (max-width: 768px) {
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
+    /* Prevent zoom on input focus (iOS) */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+
+    /* Hide horizontal scrollbars */
+    ::-webkit-scrollbar {
+        width: 3px;
+        height: 0;
+    }
+
+    /* Disable hover effects on touch (prevents sticky hover) */
+    .ecard:hover,
+    .ecard-metric:hover,
+    .ecard-forecast-day:hover,
+    .ecard-trade-level:hover,
+    .ecard-risk:hover {
+        transform: none !important;
+    }
+}
+
+/* Safe area insets for notched phones (iPhone X+) */
+@supports (padding: env(safe-area-inset-bottom)) {
+    .sidebar-wrap {
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    }
+    .footer-banner {
+        margin-bottom: calc(20px + env(safe-area-inset-bottom));
+    }
+}
