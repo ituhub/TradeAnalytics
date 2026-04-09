@@ -1618,6 +1618,36 @@ def build_prediction_results(prediction: Dict):
 
 def _build_mtf_section(prediction: Dict):
     """Build the Multi-Timeframe Analysis display section."""
+    # Show upgrade prompt if MTF was requested but blocked by plan
+    if prediction.get("mtf_upgrade_required"):
+        return html.Div([
+            make_section_header("⏱️", "Multi-Timeframe Analysis"),
+            html.Div([
+                html.Div([
+                    html.Div("🔒", style={"fontSize": "28px", "marginBottom": "8px"}),
+                    html.Div("Multi-Timeframe Consensus requires Starter or higher", style={
+                        "color": "#e2e8f0", "fontSize": "14px", "fontWeight": "600",
+                        "marginBottom": "6px",
+                    }),
+                    html.Div(
+                        "Upgrade to analyse multiple timeframes simultaneously and get "
+                        "consensus signals when 15m, 1H, 4H, and 1D all align.",
+                        style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.5",
+                               "marginBottom": "14px", "maxWidth": "400px"},
+                    ),
+                    html.A("View Plans →", href="/pricing", style={
+                        "display": "inline-block", "padding": "8px 20px", "borderRadius": "8px",
+                        "background": "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                        "color": "#fff", "fontSize": "12px", "fontWeight": "700",
+                        "textDecoration": "none",
+                    }),
+                ], style={"textAlign": "center"}),
+            ], style={
+                "padding": "28px 20px", "borderRadius": "14px",
+                "background": "rgba(15,23,42,0.5)", "border": "1px solid rgba(99,102,241,0.1)",
+            }),
+        ])
+
     mtf = prediction.get("multi_timeframe_analysis")
     if not mtf:
         return html.Div()
@@ -2182,20 +2212,39 @@ def _build_main_dashboard(user=None):
                     html.Div([
                         html.Span("⏱️", style={"fontSize": "12px"}),
                         html.Span("Multi-Timeframe Analysis", style={"fontSize": "11px", "color": "#64748b"}),
+                        # MTF lock badge for plans without mtf_analysis feature
+                        *([html.Span("🔒", style={"fontSize": "10px", "marginLeft": "4px"})]
+                          if SAAS_AUTH_AVAILABLE and user and not can_access_feature(user, "mtf_analysis")
+                          else []),
                     ], style={"display": "flex", "alignItems": "center", "gap": "6px", "marginBottom": "8px"}),
                     dcc.Checklist(
                         id="mtf-checklist",
                         options=[
-                            {"label": " 15m", "value": "15min"},
-                            {"label": " 1H", "value": "1hour"},
-                            {"label": " 4H", "value": "4hour"},
-                            {"label": " 1D", "value": "1day"},
+                            {"label": " 15m", "value": "15min",
+                             "disabled": "15min" not in allowed_timeframes},
+                            {"label": " 1H", "value": "1hour",
+                             "disabled": "1hour" not in allowed_timeframes},
+                            {"label": " 4H", "value": "4hour",
+                             "disabled": "4hour" not in allowed_timeframes},
+                            {"label": " 1D", "value": "1day",
+                             "disabled": "1day" not in allowed_timeframes},
                         ],
                         value=["1day"],
                         inline=True,
                         className="sidebar-mtf-checklist",
                         style={"fontSize": "11px"},
                     ),
+                    # Upgrade hint when MTF is locked
+                    *([html.Div([
+                        html.Span("⚡ ", style={"fontSize": "10px"}),
+                        html.Span("Upgrade to Starter to unlock multi-timeframe consensus", style={
+                            "color": "#f59e0b", "fontSize": "10px", "fontWeight": "500",
+                        }),
+                    ], style={"marginTop": "6px", "padding": "5px 8px", "borderRadius": "6px",
+                              "background": "rgba(245,158,11,0.06)",
+                              "border": "1px solid rgba(245,158,11,0.1)"})]
+                      if SAAS_AUTH_AVAILABLE and user and not can_access_feature(user, "mtf_analysis")
+                      else []),
                 ], style={"marginBottom": "20px"}),
 
                 html.Div(style={"height": "1px", "background": "linear-gradient(90deg, transparent, rgba(99,102,241,0.2), transparent)",
@@ -2881,6 +2930,12 @@ def run_prediction(n_clicks, ticker, models, timeframe, mtf_timeframes, session_
     # ── Multi-Timeframe Analysis ─────────────────────────────────────
     mtf_timeframes = mtf_timeframes or ["1day"]
     mtf_allowed = SAAS_AUTH_AVAILABLE and can_access_feature(user, "mtf_analysis") if SAAS_AUTH_AVAILABLE else True
+
+    # Filter MTF timeframes to only those the user's plan allows
+    if SAAS_AUTH_AVAILABLE and user:
+        allowed_tfs = get_allowed_timeframes(user)
+        mtf_timeframes = [tf for tf in mtf_timeframes if tf in allowed_tfs] or ["1day"]
+
     if len(mtf_timeframes) > 1 and BACKEND_AVAILABLE and mtf_allowed:
         try:
             mtf_analysis = PredictionEngine._run_multi_timeframe_analysis(ticker, mtf_timeframes)
@@ -2890,6 +2945,10 @@ def run_prediction(n_clicks, ticker, models, timeframe, mtf_timeframes, session_
                 logger.info(f"📊 MTF analysis complete: {len(mtf_analysis)} timeframes")
         except Exception as e:
             logger.warning(f"MTF analysis failed: {e}")
+    elif len(mtf_timeframes) > 1 and not mtf_allowed:
+        # User selected multiple timeframes but plan doesn't include MTF
+        prediction["mtf_upgrade_required"] = True
+        logger.info(f"⚠️ MTF blocked — user plan does not include mtf_analysis")
 
     prediction["primary_timeframe"] = timeframe
 
