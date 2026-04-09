@@ -1158,7 +1158,7 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
     ], style={
         "flex": "1", "minWidth": "0",
         "display": "flex", "flexDirection": "column",
-    })
+    }, className="landing-content-side")
 
     # ── RIGHT SIDE: LOGIN / REGISTER PANEL ──────────────────────────────────
     login_side = html.Div([
@@ -1355,7 +1355,7 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
         "borderLeft": "1px solid rgba(99,102,241,0.06)",
         "background": "rgba(8,12,28,0.4)",
         "overflowY": "auto", "maxHeight": "100vh",
-    })
+    }, className="landing-login-panel")
 
     # ── COMBINED LAYOUT ─────────────────────────────────────────────────────
     return html.Div([
@@ -1365,7 +1365,7 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
         "background": "#0a0e1a", "minHeight": "100vh",
         "display": "flex", "flexDirection": "row",
         "fontFamily": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    })
+    }, className="landing-wrapper")
 
 
 # =============================================================================

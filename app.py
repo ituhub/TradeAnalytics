@@ -3018,6 +3018,25 @@ def run_prediction(n_clicks, ticker, models, timeframe, mtf_timeframes, session_
     return prediction, msg
 
 
+# ── SYNC MTF CHECKLIST → TIMEFRAME STORE ────────────────────────────────────
+
+@callback(
+    Output("timeframe-dropdown", "data"),
+    Input("mtf-checklist", "value"),
+    prevent_initial_call=True,
+)
+def sync_mtf_to_timeframe(mtf_values):
+    """Update the primary timeframe store based on MTF checklist selection."""
+    if not mtf_values:
+        return "1day"
+    # Pick the highest timeframe as primary
+    tf_priority = ["1day", "4hour", "1hour", "15min"]
+    for tf in tf_priority:
+        if tf in mtf_values:
+            return tf
+    return "1day"
+
+
 # ── NAV BUTTON CALLBACKS ─────────────────────────────────────────────────────
 
 NAV_PAGES = ["ai_prediction", "advanced_analytics", "portfolio_mgmt", "backtesting", "subscription",

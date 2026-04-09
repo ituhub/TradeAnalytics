@@ -1,85 +1,93 @@
 /* ══════════════════════════════════════════════════════════════
-   MOBILE RESPONSIVE — MarketLens AI
-   ──────────────────────────────────────────────────────────────
+   MOBILE RESPONSIVE — MarketLens AI v2
    Place in: assets/responsive.css
-   Dash auto-loads all CSS files from the assets/ directory.
-   This file ONLY contains responsive overrides — no base styles.
    ══════════════════════════════════════════════════════════════ */
 
-/* ── Viewport meta (injected via Dash index_string or meta_tags) ── */
-/* Ensure app.py has: app = Dash(..., meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}]) */
+/* ── Global ── */
+html, body, #react-entry-point, #_dash-app-content {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
 
 /* ══════════════════════════════════════════════════════════════
-   LANDING PAGE — Stack vertically on mobile
+   LANDING PAGE — Fix split layout on mobile
+   The outer wrapper uses inline style="display:flex; flex-direction:row"
+   We must override with high-specificity selectors
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 900px) {
-    /* Landing + Login split layout → stack vertically */
-    #app-container > div[style*="flexDirection"] {
+    /* Force the landing+login wrapper to stack */
+    .landing-wrapper {
         flex-direction: column !important;
     }
 
-    /* Login panel — full width on mobile */
-    #app-container > div > div:last-child {
+    /* Landing side — full width, no scroll lock */
+    .landing-content-side {
         width: 100% !important;
-        min-width: unset !important;
-        border-left: none !important;
-        border-top: 1px solid rgba(99,102,241,0.06) !important;
-        padding: 20px 16px !important;
+        min-width: 0 !important;
+        flex: none !important;
     }
-
-    /* Landing side — full width */
-    #app-container > div > div:first-child {
-        width: 100% !important;
-        min-width: unset !important;
-    }
-
-    /* Landing inner scroll container */
-    #app-container > div > div:first-child > div {
-        padding: 24px 18px !important;
-        max-height: unset !important;
+    .landing-content-side > div {
+        padding: 24px 20px !important;
+        max-height: none !important;
         overflow-y: visible !important;
+    }
+
+    /* Login panel — full width, remove fixed width */
+    .landing-login-panel {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: none !important;
+        border-left: none !important;
+        border-top: 1px solid rgba(99,102,241,0.08) !important;
+        padding: 24px 16px !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+    }
+
+    /* Login card inner — center properly */
+    .landing-login-panel > div {
+        max-width: 380px !important;
+        margin: 0 auto !important;
     }
 }
 
 @media (max-width: 480px) {
-    /* Tighter padding on small phones */
-    #app-container > div > div:first-child > div {
-        padding: 20px 14px !important;
+    .landing-content-side > div {
+        padding: 18px 14px !important;
     }
-    #app-container > div > div:last-child {
-        padding: 16px 12px !important;
+    .landing-login-panel {
+        padding: 18px 12px !important;
+    }
+    .landing-login-panel > div {
+        max-width: 100% !important;
+        padding: 24px 16px !important;
     }
 }
 
+
 /* ══════════════════════════════════════════════════════════════
-   SIDEBAR — Collapsible on tablet/mobile
+   DASHBOARD — Sidebar + Content layout
    ══════════════════════════════════════════════════════════════ */
 
-/* Tablet: narrower sidebar */
 @media (max-width: 1024px) {
     .sidebar-container {
         width: 240px !important;
     }
-    .sidebar-nav-btn {
-        padding: 8px 12px !important;
-        font-size: 12px !important;
-    }
-    .sidebar-logo {
-        font-size: 16px !important;
-    }
 }
 
-/* Mobile: sidebar becomes top-scrollable horizontal strip or stacks above content */
 @media (max-width: 768px) {
-    /* Main dashboard layout — stack vertically */
+    /* Sidebar becomes top section, not fixed left */
     .sidebar-container {
         width: 100% !important;
         height: auto !important;
         max-height: none !important;
         position: relative !important;
         overflow-y: visible !important;
-        overflow-x: hidden !important;
     }
 
     .sidebar-wrap {
@@ -87,49 +95,41 @@
         padding: 14px 14px 10px !important;
         border-right: none !important;
         border-bottom: 1px solid rgba(99,102,241,0.08) !important;
-        flex-direction: column !important;
     }
 
-    /* Compact logo area on mobile */
-    .sidebar-logo {
-        font-size: 15px !important;
-    }
-    .sidebar-sub {
-        font-size: 9px !important;
-        margin-bottom: 10px !important;
-    }
+    /* Logo compact */
+    .sidebar-logo { font-size: 15px !important; }
+    .sidebar-sub { font-size: 9px !important; margin-bottom: 8px !important; }
 
-    /* Navigation — horizontal scroll on mobile */
+    /* Section labels */
     .sidebar-section-label {
         font-size: 8px !important;
         margin-bottom: 6px !important;
     }
 
-    /* Hide navigation text labels on small screens — show as compact grid */
+    /* Nav buttons — compact */
     .sidebar-nav-btn {
         padding: 8px 10px !important;
         font-size: 11px !important;
         gap: 6px !important;
     }
 
-    /* Quick select buttons — smaller */
+    /* Quick select — smaller */
     .sidebar-quick-btn {
         padding: 4px 10px !important;
         font-size: 10px !important;
     }
 
-    /* MTF checklist — compact */
+    /* MTF checklist compact */
     .sidebar-mtf-checklist label {
         font-size: 11px !important;
         padding: 2px 4px !important;
     }
 
-    /* Model checklist — hide on mobile (admin feature) */
-    .sidebar-model-checklist {
-        display: none !important;
-    }
+    /* Hide model checklist on mobile (admin only) */
+    .sidebar-model-checklist { display: none !important; }
 
-    /* Status block — compact */
+    /* Status block compact */
     .sidebar-status-block {
         padding: 8px 10px !important;
     }
@@ -138,21 +138,17 @@
     }
 }
 
-/* Very small phones — ultra compact sidebar */
 @media (max-width: 480px) {
-    .sidebar-wrap {
-        padding: 10px 10px 8px !important;
-    }
+    .sidebar-wrap { padding: 10px 10px 8px !important; }
     .sidebar-nav-btn {
         padding: 7px 8px !important;
         font-size: 10.5px !important;
-        border-radius: 8px !important;
     }
 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   HEADER CARD — Responsive
+   HEADER CARD
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
@@ -161,189 +157,103 @@
         border-radius: 14px !important;
         margin-bottom: 16px !important;
     }
-    .header-title {
-        font-size: 1.3rem !important;
-    }
-    .header-subtitle {
-        font-size: 0.8rem !important;
-    }
+    .header-title { font-size: 1.2rem !important; }
+    .header-subtitle { font-size: 0.8rem !important; }
 }
 
 @media (max-width: 480px) {
-    .header-card {
-        padding: 14px 12px !important;
-        border-radius: 12px !important;
-    }
-    .header-title {
-        font-size: 1.1rem !important;
-    }
+    .header-card { padding: 14px 12px !important; }
+    .header-title { font-size: 1rem !important; }
 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   CONTENT AREA — Responsive padding & grids
+   CARDS — Less padding, no hover lift on touch
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-    /* Main content area */
-    .dash-graph {
-        margin: 0 !important;
-    }
-
-    /* Cards — less padding */
     .ecard {
         padding: 16px !important;
         border-radius: 12px !important;
         margin-bottom: 12px !important;
     }
-    .ecard:hover {
-        transform: none !important;  /* Disable hover lift on touch */
-    }
+    .ecard:hover { transform: none !important; }
 
-    /* Hero card */
     .ecard-hero {
-        padding: 24px 18px !important;
+        padding: 20px 16px !important;
         border-radius: 16px !important;
     }
-    .ecard-hero .hero-title {
-        font-size: 1.3rem !important;
-    }
-    .ecard-hero .hero-icon {
-        font-size: 40px !important;
-    }
+    .ecard-hero .hero-title { font-size: 1.2rem !important; }
+    .ecard-hero .hero-icon { font-size: 36px !important; }
 
-    /* Metric cards */
-    .ecard-metric {
-        padding: 14px !important;
-        border-radius: 12px !important;
-    }
-    .ecard-metric .metric-value {
-        font-size: 1.2rem !important;
-    }
-    .ecard-metric .metric-label {
-        font-size: 10px !important;
-    }
+    .ecard-metric { padding: 12px !important; border-radius: 12px !important; }
+    .ecard-metric .metric-value { font-size: 1.1rem !important; }
+    .ecard-metric .metric-label { font-size: 10px !important; }
 
-    /* Risk cards */
-    .ecard-risk {
-        padding: 14px !important;
-    }
-    .ecard-risk .risk-value {
-        font-size: 1.2rem !important;
-    }
+    .ecard-risk { padding: 14px !important; }
+    .ecard-risk .risk-value { font-size: 1.1rem !important; }
 
-    /* Trade level */
-    .ecard-trade-level {
-        padding: 12px 14px !important;
-    }
-    .ecard-trade-level .level-price {
-        font-size: 1rem !important;
-    }
+    .ecard-trade-level { padding: 10px 12px !important; }
+    .ecard-trade-level .level-price { font-size: 1rem !important; }
 
-    /* Forecast day */
-    .ecard-forecast-day {
-        padding: 12px !important;
-    }
-    .ecard-forecast-day .day-price {
-        font-size: 1.05rem !important;
-    }
+    .ecard-forecast-day { padding: 10px !important; }
+    .ecard-forecast-day .day-price { font-size: 1rem !important; }
 
-    /* Source banner */
-    .ecard-source-banner {
-        padding: 14px 16px !important;
-    }
-    .ecard-source-banner h3 {
-        font-size: 0.9rem !important;
-    }
+    .ecard-source-banner { padding: 12px 14px !important; }
+    .ecard-source-banner h3 { font-size: 0.85rem !important; }
 
-    /* Section headers */
-    .ecard-section-header {
-        margin: 20px 0 12px 0 !important;
-    }
-    .ecard-section-header .section-title {
-        font-size: 0.95rem !important;
-    }
+    .ecard-section-header { margin: 16px 0 10px 0 !important; }
+    .ecard-section-header .section-title { font-size: 0.9rem !important; }
 
-    /* Scenario cards */
-    .scenario-card {
-        padding: 14px !important;
-    }
-    .scenario-card .scenario-value {
-        font-size: 1.15rem !important;
-    }
+    .scenario-card { padding: 12px !important; }
+    .scenario-card .scenario-value { font-size: 1.1rem !important; }
+
+    .ecard-metric:hover,
+    .ecard-forecast-day:hover,
+    .ecard-trade-level:hover,
+    .ecard-risk:hover { transform: none !important; }
 }
 
 @media (max-width: 480px) {
-    .ecard {
-        padding: 12px !important;
-        border-radius: 10px !important;
-    }
-    .ecard-hero {
-        padding: 18px 14px !important;
-    }
-    .ecard-hero .hero-title {
-        font-size: 1.1rem !important;
-    }
-    .ecard-metric .metric-value {
-        font-size: 1rem !important;
-    }
+    .ecard { padding: 12px !important; border-radius: 10px !important; }
+    .ecard-hero { padding: 16px 12px !important; }
+    .ecard-hero .hero-title { font-size: 1rem !important; }
+    .ecard-metric .metric-value { font-size: 1rem !important; }
 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   GRID OVERRIDES — Single column on mobile
+   GRIDS — Responsive columns
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-    .ecard-grid-2 {
-        grid-template-columns: 1fr !important;
-    }
-    .ecard-grid-3 {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-    .ecard-grid-4 {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-    .ecard-grid-5 {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-
-    /* Status cards row — 2 per row on tablet */
-    .ecard-grid-4 .status-card {
-        min-width: 0 !important;
-    }
+    .ecard-grid-2 { grid-template-columns: 1fr !important; }
+    .ecard-grid-3,
+    .ecard-grid-4,
+    .ecard-grid-5 { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
 @media (max-width: 480px) {
     .ecard-grid-2,
     .ecard-grid-3,
     .ecard-grid-4,
-    .ecard-grid-5 {
-        grid-template-columns: 1fr !important;
-    }
+    .ecard-grid-5 { grid-template-columns: 1fr !important; }
 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   PLOTLY CHARTS — Responsive
+   PLOTLY CHARTS
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-    .js-plotly-plot, .plotly {
-        width: 100% !important;
-    }
-    .js-plotly-plot .plotly .main-svg {
-        width: 100% !important;
-    }
-    /* Make chart containers respect width */
-    .dash-graph > div {
-        width: 100% !important;
-    }
+    .js-plotly-plot, .plotly { width: 100% !important; }
+    .js-plotly-plot .plotly .main-svg { width: 100% !important; }
+    .dash-graph > div { width: 100% !important; }
 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   TABS — Mobile-friendly
+   TABS — Scrollable on mobile
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
@@ -353,7 +263,7 @@
         white-space: nowrap;
     }
     .tab-container .tab {
-        padding: 8px 14px !important;
+        padding: 8px 12px !important;
         font-size: 12px !important;
         white-space: nowrap;
     }
@@ -368,46 +278,43 @@
 
 
 /* ══════════════════════════════════════════════════════════════
-   BUTTONS — Touch-friendly sizing
+   BUTTONS & INPUTS — Touch-friendly
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-    /* Minimum touch target 44px (Apple HIG) */
-    button, .dash-dropdown-select, input[type="text"], input[type="email"],
-    input[type="password"], .Select-control {
+    button, .Select-control, input[type="text"],
+    input[type="email"], input[type="password"] {
         min-height: 44px !important;
     }
 
-    /* Predict button */
     #predict-btn {
-        padding: 16px 24px !important;
+        padding: 16px 20px !important;
         font-size: 14px !important;
-        border-radius: 12px !important;
+    }
+
+    /* Prevent iOS zoom on input focus */
+    input[type="text"], input[type="email"],
+    input[type="password"], textarea, select {
+        font-size: 16px !important;
     }
 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   DROPDOWN — Better mobile styling
+   DROPDOWN — Better mobile visibility
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-    .Select-control {
-        background: rgba(15,23,42,0.7) !important;
-    }
+    .Select-control { background: rgba(15,23,42,0.7) !important; }
     .Select-value-label {
         color: #e2e8f0 !important;
         font-weight: 600 !important;
         font-size: 14px !important;
     }
-    .Select-placeholder {
-        color: #64748b !important;
-        font-size: 14px !important;
-    }
+    .Select-placeholder { color: #64748b !important; font-size: 14px !important; }
     .Select-menu-outer {
         background: #0f1629 !important;
         border: 1px solid rgba(99,102,241,0.2) !important;
-        border-radius: 10px !important;
         z-index: 9999 !important;
     }
     .Select-option {
@@ -418,23 +325,10 @@
 
 
 /* ══════════════════════════════════════════════════════════════
-   TICKER BAR — Wrap on mobile
+   PRICING PAGE — Single column
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-    /* Badge pills should wrap nicely */
-    div[style*="flexWrap: wrap"] {
-        gap: 6px !important;
-    }
-}
-
-
-/* ══════════════════════════════════════════════════════════════
-   PRICING PAGE — Single column on mobile
-   ══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 768px) {
-    /* Plan cards grid → single column */
     div[style*="gridTemplateColumns: repeat(auto-fit"] {
         grid-template-columns: 1fr !important;
     }
@@ -442,7 +336,7 @@
 
 
 /* ══════════════════════════════════════════════════════════════
-   CONTACT MODAL — Full-screen on mobile
+   CONTACT MODAL — Full width on mobile
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
@@ -450,73 +344,27 @@
         width: 95% !important;
         max-width: none !important;
         margin: 20px auto !important;
-        border-radius: 16px !important;
     }
 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   PAYMENT SUCCESS PAGE — Responsive
+   SCROLLBAR — Thin on mobile
    ══════════════════════════════════════════════════════════════ */
 
-@media (max-width: 480px) {
-    div[style*="maxWidth: 480px"][style*="margin: 80px auto"] {
-        margin: 40px 16px !important;
-        padding: 32px 20px !important;
-    }
-}
-
-
-/* ══════════════════════════════════════════════════════════════
-   GENERAL MOBILE POLISH
-   ══════════════════════════════════════════════════════════════ */
-
-/* Prevent horizontal overflow on all screens */
-html, body, #react-entry-point, #_dash-app-content {
-    overflow-x: hidden;
-    max-width: 100vw;
-}
-
-/* Smooth scrolling */
-html {
-    scroll-behavior: smooth;
-    -webkit-text-size-adjust: 100%;
-}
-
-/* Better text rendering on mobile */
 @media (max-width: 768px) {
-    body {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-rendering: optimizeLegibility;
-    }
-
-    /* Prevent zoom on input focus (iOS) */
-    input[type="text"],
-    input[type="email"],
-    input[type="password"],
-    textarea,
-    select {
-        font-size: 16px !important;
-    }
-
-    /* Hide horizontal scrollbars */
-    ::-webkit-scrollbar {
-        width: 3px;
-        height: 0;
-    }
-
-    /* Disable hover effects on touch (prevents sticky hover) */
-    .ecard:hover,
-    .ecard-metric:hover,
-    .ecard-forecast-day:hover,
-    .ecard-trade-level:hover,
-    .ecard-risk:hover {
-        transform: none !important;
+    ::-webkit-scrollbar { width: 3px; height: 0; }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(99,102,241,0.2);
+        border-radius: 4px;
     }
 }
 
-/* Safe area insets for notched phones (iPhone X+) */
+
+/* ══════════════════════════════════════════════════════════════
+   SAFE AREAS — Notched phones (iPhone X+)
+   ══════════════════════════════════════════════════════════════ */
+
 @supports (padding: env(safe-area-inset-bottom)) {
     .sidebar-wrap {
         padding-bottom: calc(10px + env(safe-area-inset-bottom));
