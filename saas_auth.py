@@ -800,25 +800,351 @@ def reset_user_password(email: str, new_password: str) -> Dict:
 # DASH UI — LOGIN PAGE
 # =============================================================================
 
-def build_login_page(error_msg: str = "", success_msg: str = ""):
-    """Build the login/register/forgot-password page layout."""
+def _build_feature_card(icon, title, description, color="#06b6d4"):
+    """Build a single feature card for the landing page."""
     return html.Div([
+        html.Div(icon, style={
+            "fontSize": "28px", "marginBottom": "12px",
+            "width": "48px", "height": "48px", "borderRadius": "12px",
+            "display": "flex", "alignItems": "center", "justifyContent": "center",
+            "background": f"linear-gradient(135deg, {color}15, {color}08)",
+            "border": f"1px solid {color}20",
+        }),
+        html.H4(title, style={
+            "color": "#e2e8f0", "fontSize": "14px", "fontWeight": "700",
+            "margin": "0 0 6px 0", "letterSpacing": "0.01em",
+        }),
+        html.P(description, style={
+            "color": "#64748b", "fontSize": "12px", "margin": "0",
+            "lineHeight": "1.5",
+        }),
+    ], style={
+        "padding": "18px 16px", "borderRadius": "14px",
+        "background": "rgba(15,23,42,0.5)", "border": "1px solid rgba(99,102,241,0.08)",
+        "transition": "border-color 0.2s, transform 0.2s",
+    })
+
+
+def _build_stat_pill(value, label, color="#06b6d4"):
+    """Build a stat pill for the landing hero section."""
+    return html.Div([
+        html.Div(value, style={
+            "fontSize": "20px", "fontWeight": "800", "color": color,
+            "letterSpacing": "-0.02em", "lineHeight": "1",
+        }),
+        html.Div(label, style={
+            "fontSize": "10px", "color": "#64748b", "fontWeight": "600",
+            "letterSpacing": "0.05em", "textTransform": "uppercase", "marginTop": "2px",
+        }),
+    ], style={
+        "textAlign": "center", "padding": "12px 16px", "borderRadius": "12px",
+        "background": "rgba(15,23,42,0.6)", "border": "1px solid rgba(99,102,241,0.08)",
+        "flex": "1", "minWidth": "0",
+    })
+
+
+def _build_model_tag(name, color="#6366f1"):
+    """Build a model architecture tag."""
+    return html.Span(name, style={
+        "fontSize": "10px", "fontWeight": "600", "letterSpacing": "0.03em",
+        "color": color, "background": f"{color}12",
+        "border": f"1px solid {color}25",
+        "padding": "4px 10px", "borderRadius": "6px", "whiteSpace": "nowrap",
+    })
+
+
+def build_login_page(error_msg: str = "", success_msg: str = ""):
+    """Build the landing page (left) + login/register panel (right) layout."""
+
+    # ── LEFT SIDE: LANDING PAGE ─────────────────────────────────────────────
+    landing_side = html.Div([
+        # Scrollable inner container
         html.Div([
-            # Logo
+
+            # ── Brand header ──
             html.Div([
-                html.Div("⚡", style={"fontSize": "36px"}),
+                html.Div([
+                    html.Div("⚡", style={"fontSize": "28px"}),
+                ], style={
+                    "background": "linear-gradient(135deg, #06b6d4, #8b5cf6)",
+                    "width": "48px", "height": "48px", "borderRadius": "14px",
+                    "display": "flex", "alignItems": "center", "justifyContent": "center",
+                    "boxShadow": "0 4px 20px rgba(99,102,241,0.3)",
+                }),
+                html.Div([
+                    html.Span("MarketLens", style={
+                        "color": "#e2e8f0", "fontSize": "20px", "fontWeight": "800",
+                        "letterSpacing": "-0.02em",
+                    }),
+                    html.Span(" AI", style={
+                        "color": "#06b6d4", "fontSize": "20px", "fontWeight": "800",
+                    }),
+                ]),
+            ], style={"display": "flex", "alignItems": "center", "gap": "14px",
+                       "marginBottom": "32px"}),
+
+            # ── Hero section ──
+            html.Div([
+                html.Div("INSTITUTIONAL-GRADE AI RESEARCH & ANALYSIS", style={
+                    "fontSize": "10px", "fontWeight": "700", "letterSpacing": "0.12em",
+                    "color": "#06b6d4", "marginBottom": "12px",
+                    "padding": "5px 14px", "borderRadius": "20px", "display": "inline-block",
+                    "background": "rgba(6,182,212,0.08)", "border": "1px solid rgba(6,182,212,0.15)",
+                }),
+                html.H1([
+                    html.Span("AI-Powered", style={"display": "block"}),
+                    html.Span("Market Intelligence", style={
+                        "display": "block",
+                        "background": "linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899)",
+                        "WebkitBackgroundClip": "text", "WebkitTextFillColor": "transparent",
+                    }),
+                    html.Span("That Can Help", style={"display": "block"}),
+                ], style={
+                    "fontSize": "clamp(1.6rem, 3vw, 2.4rem)", "fontWeight": "800",
+                    "color": "#e2e8f0", "margin": "0 0 16px 0",
+                    "lineHeight": "1.15", "letterSpacing": "-0.03em",
+                }),
+                html.P(
+                    "8 neural network architectures. Real-time market regime detection. "
+                    "Walk-forward backtesting with SHAP explanations. Institutional-grade "
+                    "research and analysis tools — built for serious traders.",
+                    style={
+                        "color": "#94a3b8", "fontSize": "14px", "lineHeight": "1.6",
+                        "margin": "0 0 24px 0", "maxWidth": "480px",
+                    },
+                ),
+            ]),
+
+            # ── Stats row ──
+            html.Div([
+                _build_stat_pill("8", "AI Models", "#8b5cf6"),
+                _build_stat_pill("13+", "Tickers", "#06b6d4"),
+                _build_stat_pill("24/7", "Analysis", "#10b981"),
+                _build_stat_pill("99.9%", "Uptime", "#f59e0b"),
+            ], style={
+                "display": "flex", "gap": "10px", "marginBottom": "28px",
+                "flexWrap": "wrap",
+            }),
+
+            # ── Model architectures ──
+            html.Div([
+                html.Div("Neural Network Ensemble", style={
+                    "color": "#94a3b8", "fontSize": "11px", "fontWeight": "600",
+                    "letterSpacing": "0.05em", "textTransform": "uppercase",
+                    "marginBottom": "10px",
+                }),
+                html.Div([
+                    _build_model_tag("Transformer", "#8b5cf6"),
+                    _build_model_tag("CNN-LSTM", "#06b6d4"),
+                    _build_model_tag("TCN", "#10b981"),
+                    _build_model_tag("Informer", "#ec4899"),
+                    _build_model_tag("N-BEATS", "#f59e0b"),
+                    _build_model_tag("LSTM-GRU", "#6366f1"),
+                    _build_model_tag("XGBoost", "#ef4444"),
+                    _build_model_tag("Sklearn", "#14b8a6"),
+                ], style={
+                    "display": "flex", "flexWrap": "wrap", "gap": "6px",
+                }),
+            ], style={"marginBottom": "28px"}),
+
+            # ── Feature grid ──
+            html.Div([
+                html.Div("What You Get", style={
+                    "color": "#94a3b8", "fontSize": "11px", "fontWeight": "600",
+                    "letterSpacing": "0.05em", "textTransform": "uppercase",
+                    "marginBottom": "14px",
+                }),
+                html.Div([
+                    _build_feature_card(
+                        "🧠", "Multi-Model Ensemble",
+                        "Up to 8 deep learning architectures collaborate on every analysis — Transformer, CNN-LSTM, TCN, N-BEATS, Informer & more.",
+                        "#8b5cf6",
+                    ),
+                    _build_feature_card(
+                        "📊", "Walk-Forward Backtesting",
+                        "Rigorous out-of-sample validation with Sharpe ratio, max drawdown, win rate, and equity curve analysis.",
+                        "#06b6d4",
+                    ),
+                    _build_feature_card(
+                        "🔍", "SHAP Explanations",
+                        "Understand exactly why each model produced its output — full feature attribution with interactive SHAP plots.",
+                        "#10b981",
+                    ),
+                    _build_feature_card(
+                        "🌊", "Market Regime Detection",
+                        "Automatic identification of bull, bear, and sideways regimes using Hidden Markov Models & volatility clustering.",
+                        "#f59e0b",
+                    ),
+                    _build_feature_card(
+                        "⚡", "Multi-Timeframe Consensus",
+                        "Analyze 15min to daily timeframes simultaneously. Get consensus signals when multiple timeframes align.",
+                        "#ec4899",
+                    ),
+                    _build_feature_card(
+                        "🎯", "Advanced Risk Analytics",
+                        "Track portfolio risk metrics, drawdown limits, profit targets, and position sizing — tailored for disciplined traders.",
+                        "#6366f1",
+                    ),
+                    _build_feature_card(
+                        "🔔", "Drift & Anomaly Alerts",
+                        "Real-time monitoring for data drift, concept drift, and distribution shifts that degrade model accuracy.",
+                        "#ef4444",
+                    ),
+                    _build_feature_card(
+                        "🌐", "13+ Global Instruments",
+                        "Crypto (BTC, ETH, SOL), forex (EUR/USD, USD/JPY), indices (S&P 500, DAX, HSI), commodities (Gold, Silver, Cocoa, Coffee).",
+                        "#14b8a6",
+                    ),
+                ], style={
+                    "display": "grid",
+                    "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))",
+                    "gap": "12px",
+                }),
+            ], style={"marginBottom": "28px"}),
+
+            # ── Plan highlights ──
+            html.Div([
+                html.Div("Plans For Every Trader", style={
+                    "color": "#94a3b8", "fontSize": "11px", "fontWeight": "600",
+                    "letterSpacing": "0.05em", "textTransform": "uppercase",
+                    "marginBottom": "14px",
+                }),
+                html.Div([
+                    # Discovery
+                    html.Div([
+                        html.Div([
+                            html.Span("🎁", style={"fontSize": "18px"}),
+                            html.Span("Discovery", style={
+                                "color": "#34d399", "fontSize": "14px", "fontWeight": "700",
+                            }),
+                            html.Span("FREE", style={
+                                "fontSize": "9px", "fontWeight": "700", "letterSpacing": "0.08em",
+                                "color": "#34d399", "background": "rgba(16,185,129,0.12)",
+                                "padding": "2px 8px", "borderRadius": "4px",
+                            }),
+                        ], style={"display": "flex", "alignItems": "center", "gap": "8px", "marginBottom": "6px"}),
+                        html.P("14 days free on signup — 4 models, 5 analyses/day, backtesting & SHAP", style={
+                            "color": "#64748b", "fontSize": "12px", "margin": "0", "lineHeight": "1.4",
+                        }),
+                    ], style={
+                        "padding": "14px 16px", "borderRadius": "12px",
+                        "background": "rgba(16,185,129,0.04)", "border": "1px solid rgba(16,185,129,0.1)",
+                    }),
+                    # Starter
+                    html.Div([
+                        html.Div([
+                            html.Span("⚡", style={"fontSize": "18px"}),
+                            html.Span("Starter", style={
+                                "color": "#06b6d4", "fontSize": "14px", "fontWeight": "700",
+                            }),
+                            html.Span("€39/mo", style={
+                                "fontSize": "12px", "fontWeight": "700", "color": "#06b6d4",
+                            }),
+                        ], style={"display": "flex", "alignItems": "center", "gap": "8px", "marginBottom": "6px"}),
+                        html.P("10 analyses/day, drift alerts, multi-TF analysis, 7 tickers", style={
+                            "color": "#64748b", "fontSize": "12px", "margin": "0", "lineHeight": "1.4",
+                        }),
+                    ], style={
+                        "padding": "14px 16px", "borderRadius": "12px",
+                        "background": "rgba(6,182,212,0.04)", "border": "1px solid rgba(6,182,212,0.1)",
+                    }),
+                    # Professional
+                    html.Div([
+                        html.Div([
+                            html.Span("🔥", style={"fontSize": "18px"}),
+                            html.Span("Professional", style={
+                                "color": "#8b5cf6", "fontSize": "14px", "fontWeight": "700",
+                            }),
+                            html.Span("€89/mo", style={
+                                "fontSize": "12px", "fontWeight": "700", "color": "#8b5cf6",
+                            }),
+                            html.Span("POPULAR", style={
+                                "fontSize": "8px", "fontWeight": "700", "letterSpacing": "0.08em",
+                                "color": "#fff", "background": "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                                "padding": "2px 8px", "borderRadius": "4px",
+                            }),
+                        ], style={"display": "flex", "alignItems": "center", "gap": "8px", "marginBottom": "6px"}),
+                        html.P("Full 8-model ensemble, 25 analyses/day, all tickers, risk dashboard, model training", style={
+                            "color": "#64748b", "fontSize": "12px", "margin": "0", "lineHeight": "1.4",
+                        }),
+                    ], style={
+                        "padding": "14px 16px", "borderRadius": "12px",
+                        "background": "rgba(139,92,246,0.04)", "border": "1px solid rgba(139,92,246,0.12)",
+                    }),
+                    # Enterprise
+                    html.Div([
+                        html.Div([
+                            html.Span("🏛️", style={"fontSize": "18px"}),
+                            html.Span("Enterprise", style={
+                                "color": "#f59e0b", "fontSize": "14px", "fontWeight": "700",
+                            }),
+                            html.Span("Custom", style={
+                                "fontSize": "12px", "fontWeight": "700", "color": "#f59e0b",
+                            }),
+                        ], style={"display": "flex", "alignItems": "center", "gap": "8px", "marginBottom": "6px"}),
+                        html.P("Unlimited analyses, API access, Monte Carlo, portfolio optimization, white-label", style={
+                            "color": "#64748b", "fontSize": "12px", "margin": "0", "lineHeight": "1.4",
+                        }),
+                    ], style={
+                        "padding": "14px 16px", "borderRadius": "12px",
+                        "background": "rgba(245,158,11,0.04)", "border": "1px solid rgba(245,158,11,0.1)",
+                    }),
+                ], style={"display": "flex", "flexDirection": "column", "gap": "8px"}),
+            ], style={"marginBottom": "28px"}),
+
+            # ── Trust footer ──
+            html.Div([
+                html.Div(style={
+                    "height": "1px", "margin": "0 0 16px 0",
+                    "background": "linear-gradient(90deg, transparent, rgba(99,102,241,0.12), transparent)",
+                }),
+                html.Div([
+                    html.Span("🔒 Secure payments via Stripe", style={"color": "#475569", "fontSize": "11px"}),
+                    html.Span("  •  ", style={"color": "#334155"}),
+                    html.Span("Cancel anytime", style={"color": "#475569", "fontSize": "11px"}),
+                    html.Span("  •  ", style={"color": "#334155"}),
+                    html.Span("14-day money-back guarantee", style={"color": "#475569", "fontSize": "11px"}),
+                ], style={"textAlign": "center"}),
+                html.Div([
+                    html.Span("Built with ", style={"color": "#334155", "fontSize": "11px"}),
+                    html.Span("PyTorch", style={"color": "#475569", "fontSize": "11px", "fontWeight": "600"}),
+                    html.Span(" • ", style={"color": "#334155", "fontSize": "11px"}),
+                    html.Span("TensorFlow", style={"color": "#475569", "fontSize": "11px", "fontWeight": "600"}),
+                    html.Span(" • ", style={"color": "#334155", "fontSize": "11px"}),
+                    html.Span("Plotly Dash", style={"color": "#475569", "fontSize": "11px", "fontWeight": "600"}),
+                    html.Span(" • ", style={"color": "#334155", "fontSize": "11px"}),
+                    html.Span("Google Cloud", style={"color": "#475569", "fontSize": "11px", "fontWeight": "600"}),
+                ], style={"textAlign": "center", "marginTop": "8px"}),
+            ], style={"paddingBottom": "20px"}),
+
+        ], style={
+            "padding": "40px 36px",
+            "overflowY": "auto", "maxHeight": "100vh",
+            "scrollbarWidth": "thin", "scrollbarColor": "rgba(99,102,241,0.2) transparent",
+        }),
+    ], style={
+        "flex": "1", "minWidth": "0",
+        "display": "flex", "flexDirection": "column",
+    })
+
+    # ── RIGHT SIDE: LOGIN / REGISTER PANEL ──────────────────────────────────
+    login_side = html.Div([
+        html.Div([
+            # Logo (compact for right panel)
+            html.Div([
+                html.Div("⚡", style={"fontSize": "30px"}),
             ], style={
                 "background": "linear-gradient(135deg, #06b6d4, #8b5cf6)",
-                "width": "70px", "height": "70px", "borderRadius": "18px",
+                "width": "56px", "height": "56px", "borderRadius": "16px",
                 "display": "flex", "alignItems": "center", "justifyContent": "center",
-                "margin": "0 auto 20px", "boxShadow": "0 8px 30px rgba(99,102,241,0.3)",
+                "margin": "0 auto 16px", "boxShadow": "0 8px 30px rgba(99,102,241,0.3)",
             }),
-            html.H1("MarketLens AI", style={
-                "textAlign": "center", "fontSize": "1.6rem", "fontWeight": "800",
+            html.H2("Welcome Back", style={
+                "textAlign": "center", "fontSize": "1.3rem", "fontWeight": "800",
                 "color": "#e2e8f0", "margin": "0 0 4px 0",
             }),
-            html.P("Sign in to access AI-powered market analysis", style={
-                "textAlign": "center", "color": "#64748b", "fontSize": "13px", "margin": "0 0 28px 0",
+            html.P("Sign in to your trading dashboard", style={
+                "textAlign": "center", "color": "#64748b", "fontSize": "12px", "margin": "0 0 24px 0",
             }),
 
             # Error message
@@ -949,23 +1275,25 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
                     "color": "#6366f1", "fontSize": "13px", "fontWeight": "600",
                     "textDecoration": "none",
                 }),
-            ], style={"textAlign": "center", "marginBottom": "8px"}),
+            ], style={"textAlign": "center", "marginBottom": "10px"}),
 
             # Discovery promo badge
             html.Div([
                 html.Div([
                     html.Span("🎁 ", style={"fontSize": "16px"}),
-                    html.Span("Create an account → get 14 days of Discovery access FREE", style={
+                    html.Span("Create account → 14 days Discovery FREE", style={
                         "color": "#34d399", "fontSize": "12px", "fontWeight": "600",
                     }),
                 ], style={"display": "flex", "alignItems": "center", "justifyContent": "center", "gap": "4px"}),
-                html.Div("4 AI models • 5 predictions/day • Backtesting • Advanced analytics",
+                html.Div("4 AI models • 5 analyses/day • Backtesting • SHAP",
                          style={"color": "#64748b", "fontSize": "11px", "textAlign": "center", "marginTop": "4px"}),
             ], style={
-                "padding": "10px 16px", "borderRadius": "10px", "marginBottom": "16px",
+                "padding": "10px 16px", "borderRadius": "10px", "marginBottom": "12px",
                 "background": "rgba(16,185,129,0.06)", "border": "1px solid rgba(16,185,129,0.12)",
             }),
-                html.Div([
+
+            # Footer links
+            html.Div([
                 html.A("Terms of Service", href="#", style={
                     "color": "#475569", "fontSize": "11px", "textDecoration": "none",
                 }),
@@ -976,13 +1304,29 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
             ], style={"textAlign": "center", "marginTop": "4px"}),
 
         ], style={
-            "maxWidth": "400px", "margin": "60px auto", "padding": "36px 32px",
-            "background": "rgba(15,23,42,0.8)", "backdropFilter": "blur(20px)",
+            "maxWidth": "400px", "width": "100%", "padding": "32px 28px",
+            "background": "rgba(15,23,42,0.85)", "backdropFilter": "blur(24px)",
             "border": "1px solid rgba(99,102,241,0.12)", "borderRadius": "20px",
-            "boxShadow": "0 20px 60px rgba(0,0,0,0.4)",
+            "boxShadow": "0 20px 60px rgba(0,0,0,0.5)",
         }),
-    ], style={"background": "#0a0e1a", "minHeight": "100vh",
-              "display": "flex", "alignItems": "center", "justifyContent": "center"})
+    ], style={
+        "width": "440px", "minWidth": "380px", "flexShrink": "0",
+        "display": "flex", "alignItems": "center", "justifyContent": "center",
+        "padding": "24px 28px",
+        "borderLeft": "1px solid rgba(99,102,241,0.06)",
+        "background": "rgba(8,12,28,0.4)",
+        "overflowY": "auto", "maxHeight": "100vh",
+    })
+
+    # ── COMBINED LAYOUT ─────────────────────────────────────────────────────
+    return html.Div([
+        landing_side,
+        login_side,
+    ], style={
+        "background": "#0a0e1a", "minHeight": "100vh",
+        "display": "flex", "flexDirection": "row",
+        "fontFamily": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    })
 
 
 # =============================================================================

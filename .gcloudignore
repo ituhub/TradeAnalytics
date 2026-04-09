@@ -15,3 +15,4 @@ saved_results/
 *.joblib
 *.tar.gz
 data/users.json
+__pycache__/
