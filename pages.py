@@ -1576,7 +1576,27 @@ def build_model_training_page(ticker: str):
 # ─── ADMIN PANEL — MAINTENANCE & MONITORING DASHBOARD ────────────────────────
 
 def build_admin_page():
-    """Build the Admin Panel — user management, email center, system monitoring."""
+    """Build the Admin Panel — user management, email center, system monitoring, feature flags."""
+
+    # ── Load monitoring & feature flags ──────────────────────────
+    monitoring_section = html.Div()
+    flags_section = html.Div()
+    try:
+        from admin_monitoring import build_monitoring_section, build_feature_flags_section
+        monitoring_section = build_monitoring_section()
+        flags_section = build_feature_flags_section()
+    except ImportError:
+        monitoring_section = html.Div([
+            html.P("admin_monitoring.py not found. Add it to enable system monitoring.",
+                   style={"color": "#64748b", "fontSize": "13px"}),
+        ])
+        flags_section = html.Div([
+            html.P("admin_monitoring.py not found. Add it to enable feature flags.",
+                   style={"color": "#64748b", "fontSize": "13px"}),
+        ])
+    except Exception as e:
+        monitoring_section = html.Div(f"Monitoring error: {e}", style={"color": "#f87171", "fontSize": "12px"})
+        flags_section = html.Div(f"Flags error: {e}", style={"color": "#f87171", "fontSize": "12px"})
 
     # ── Fetch registered users from Firestore ────────────────────
     users_list = []
@@ -1699,6 +1719,23 @@ def build_admin_page():
         html.Div([users_table], className="ecard"),
         html.Div([plan_chart,
         ], style={"display": "grid", "gridTemplateColumns": "1fr", "gap": "16px", "marginTop": "16px"}),
+
+        # ── Monitoring Dashboard ──
+        make_section_header("📡", "System Monitoring"),
+        html.Div([
+            html.Button("🔄 Refresh Health Checks", id="run-health-check-btn", n_clicks=0, style={
+                "padding": "8px 18px", "borderRadius": "8px", "border": "none",
+                "background": "rgba(99,102,241,0.12)", "color": "#a78bfa",
+                "fontSize": "12px", "fontWeight": "600", "cursor": "pointer",
+                "marginBottom": "12px",
+            }),
+            html.Div(id="health-check-results", children=monitoring_section),
+        ], className="ecard"),
+
+        # ── Feature Flags ──
+        make_section_header("🏴", "Feature Flags"),
+        html.Div([flags_section], className="ecard"),
+
         make_section_header("📧", "Email Center"), email_panel,
         make_section_header("⚙️", "System Status"), sys_status,
     ])

@@ -3415,6 +3415,16 @@ try:
 except ImportError:
     pass
 
+# Register admin monitoring callbacks (feature flags, health checks)
+try:
+    from admin_monitoring import register_monitoring_callbacks
+    register_monitoring_callbacks(app)
+    logger.info("✅ Admin monitoring callbacks registered")
+except ImportError:
+    logger.info("ℹ️ admin_monitoring.py not found — monitoring disabled")
+except Exception as e:
+    logger.warning(f"⚠️ Monitoring callbacks failed: {e}")
+
 # =============================================================================
 # RUN
 # =============================================================================
