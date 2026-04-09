@@ -72,7 +72,7 @@ PLANS = {
     "free": {
         "name": "Free Demo",
         "predictions_per_day": 2,
-        "tickers": ["BTCUSD", "ETHUSD", "SPY"],
+        "tickers": ["ETHUSD", "BTCUSD", "SOLUSD"],
         "timeframes": ["1day"],
         "features": {
             "backtesting": False,
@@ -92,7 +92,7 @@ PLANS = {
     "discovery": {
         "name": "Discovery",
         "predictions_per_day": 5,
-        "tickers": ["BTCUSD", "ETHUSD", "SOLUSD", "SPY", "AAPL", "EURUSD", "GC=F"],
+        "tickers": ["ETHUSD", "BTCUSD", "SOLUSD", "USDJPY", "GC=F", "NG=F", "EURUSD"],
         "timeframes": ["1hour", "4hour", "1day"],
         "features": {
             "backtesting": True,
@@ -885,32 +885,26 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
 
             # ── Hero section ──
             html.Div([
-                html.Div("INSTITUTIONAL-GRADE AI RESEARCH & ANALYSIS", style={
-                    "fontSize": "10px", "fontWeight": "700", "letterSpacing": "0.12em",
+                html.Div("📊 AI-POWERED TRADING RESEARCH & ANALYSIS PLATFORM", style={
+                    "fontSize": "10px", "fontWeight": "700", "letterSpacing": "0.1em",
                     "color": "#06b6d4", "marginBottom": "12px",
                     "padding": "5px 14px", "borderRadius": "20px", "display": "inline-block",
                     "background": "rgba(6,182,212,0.08)", "border": "1px solid rgba(6,182,212,0.15)",
                 }),
-                html.H1([
-                    html.Span("AI-Powered", style={"display": "block"}),
-                    html.Span("Market Intelligence", style={
-                        "display": "block",
-                        "background": "linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899)",
-                        "WebkitBackgroundClip": "text", "WebkitTextFillColor": "transparent",
-                    }),
-                    html.Span("That Can Help", style={"display": "block"}),
-                ], style={
-                    "fontSize": "clamp(1.6rem, 3vw, 2.4rem)", "fontWeight": "800",
-                    "color": "#e2e8f0", "margin": "0 0 16px 0",
-                    "lineHeight": "1.15", "letterSpacing": "-0.03em",
-                }),
                 html.P(
-                    "8 neural network architectures. Real-time market regime detection. "
-                    "Walk-forward backtesting with SHAP explanations. Institutional-grade "
-                    "research and analysis tools — built for serious traders.",
+                    "Transform complex market data into clear, data-driven insights.",
                     style={
-                        "color": "#94a3b8", "fontSize": "14px", "lineHeight": "1.6",
-                        "margin": "0 0 24px 0", "maxWidth": "480px",
+                        "color": "#e2e8f0", "fontSize": "clamp(1.1rem, 2.5vw, 1.5rem)",
+                        "fontWeight": "700", "lineHeight": "1.3",
+                        "margin": "0 0 12px 0", "maxWidth": "500px",
+                    },
+                ),
+                html.P(
+                    "MarketLens AI is designed for traders, analysts, and learners who want to "
+                    "explore financial markets using advanced analytical tools — without relying on guesswork.",
+                    style={
+                        "color": "#94a3b8", "fontSize": "13px", "lineHeight": "1.6",
+                        "margin": "0 0 24px 0", "maxWidth": "500px",
                     },
                 ),
             ]),
@@ -947,58 +941,97 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
                 }),
             ], style={"marginBottom": "28px"}),
 
-            # ── Feature grid ──
+            # ── What You Can Do ──
             html.Div([
-                html.Div("What You Get", style={
-                    "color": "#94a3b8", "fontSize": "11px", "fontWeight": "600",
-                    "letterSpacing": "0.05em", "textTransform": "uppercase",
-                    "marginBottom": "14px",
-                }),
+                html.Div([
+                    html.Span("🧠 ", style={"fontSize": "14px"}),
+                    html.Span("What You Can Do", style={
+                        "color": "#e2e8f0", "fontSize": "14px", "fontWeight": "700",
+                    }),
+                ], style={"display": "flex", "alignItems": "center", "gap": "6px", "marginBottom": "14px"}),
                 html.Div([
                     _build_feature_card(
-                        "🧠", "Multi-Model Ensemble",
-                        "Up to 8 deep learning architectures collaborate on every analysis — Transformer, CNN-LSTM, TCN, N-BEATS, Informer & more.",
+                        "📊", "Analyze Market Behavior",
+                        "Use advanced AI models to study price action, momentum, and volatility across multiple asset classes.",
                         "#8b5cf6",
                     ),
                     _build_feature_card(
-                        "📊", "Walk-Forward Backtesting",
-                        "Rigorous out-of-sample validation with Sharpe ratio, max drawdown, win rate, and equity curve analysis.",
+                        "🔄", "Multi-Model Perspectives",
+                        "Explore insights from 8 different model architectures — each capturing different market dynamics and patterns.",
                         "#06b6d4",
                     ),
                     _build_feature_card(
-                        "🔍", "SHAP Explanations",
-                        "Understand exactly why each model produced its output — full feature attribution with interactive SHAP plots.",
+                        "📈", "Backtest Strategies",
+                        "Validate trading ideas with walk-forward backtesting — Sharpe ratio, drawdown analysis, and equity curves.",
                         "#10b981",
                     ),
                     _build_feature_card(
-                        "🌊", "Market Regime Detection",
-                        "Automatic identification of bull, bear, and sideways regimes using Hidden Markov Models & volatility clustering.",
+                        "🔍", "Interpretable Insights",
+                        "Understand model outputs with SHAP analysis — see exactly which features drive each analytical result.",
                         "#f59e0b",
                     ),
                     _build_feature_card(
-                        "⚡", "Multi-Timeframe Consensus",
-                        "Analyze 15min to daily timeframes simultaneously. Get consensus signals when multiple timeframes align.",
+                        "🌊", "Market Regime Analysis",
+                        "Study structural market shifts — identify bull, bear, and sideways regimes using Hidden Markov Models.",
                         "#ec4899",
                     ),
                     _build_feature_card(
-                        "🎯", "Advanced Risk Analytics",
-                        "Track portfolio risk metrics, drawdown limits, profit targets, and position sizing — tailored for disciplined traders.",
+                        "⏱️", "Multi-Timeframe Study",
+                        "Analyze 15min to daily timeframes simultaneously and observe how signals align across different horizons.",
                         "#6366f1",
-                    ),
-                    _build_feature_card(
-                        "🔔", "Drift & Anomaly Alerts",
-                        "Real-time monitoring for data drift, concept drift, and distribution shifts that degrade model accuracy.",
-                        "#ef4444",
-                    ),
-                    _build_feature_card(
-                        "🌐", "13+ Global Instruments",
-                        "Crypto (BTC, ETH, SOL), forex (EUR/USD, USD/JPY), indices (S&P 500, DAX, HSI), commodities (Gold, Silver, Cocoa, Coffee).",
-                        "#14b8a6",
                     ),
                 ], style={
                     "display": "grid",
                     "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))",
                     "gap": "12px",
+                }),
+            ], style={"marginBottom": "28px"}),
+
+            # ── Built for Research & Understanding ──
+            html.Div([
+                html.Div([
+                    html.Span("🔬 ", style={"fontSize": "14px"}),
+                    html.Span("Built for Research & Understanding", style={
+                        "color": "#e2e8f0", "fontSize": "14px", "fontWeight": "700",
+                    }),
+                ], style={"display": "flex", "alignItems": "center", "gap": "6px", "marginBottom": "10px"}),
+                html.P(
+                    "Powered by a combination of modern machine learning techniques, this platform "
+                    "enables users to evaluate strategies objectively and gain deeper insights into "
+                    "financial data — all in a transparent, research-driven environment.",
+                    style={
+                        "color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6",
+                        "margin": "0 0 12px 0",
+                    },
+                ),
+                html.Div([
+                    html.Div([
+                        html.Span("✓ ", style={"color": "#10b981", "fontWeight": "700"}),
+                        html.Span("Evaluate strategies with real data — not guesswork", style={
+                            "color": "#94a3b8", "fontSize": "12px",
+                        }),
+                    ], style={"marginBottom": "6px"}),
+                    html.Div([
+                        html.Span("✓ ", style={"color": "#10b981", "fontWeight": "700"}),
+                        html.Span("Gain deeper insights into market structure and dynamics", style={
+                            "color": "#94a3b8", "fontSize": "12px",
+                        }),
+                    ], style={"marginBottom": "6px"}),
+                    html.Div([
+                        html.Span("✓ ", style={"color": "#10b981", "fontWeight": "700"}),
+                        html.Span("Understand why models produce their outputs — full transparency", style={
+                            "color": "#94a3b8", "fontSize": "12px",
+                        }),
+                    ], style={"marginBottom": "6px"}),
+                    html.Div([
+                        html.Span("✓ ", style={"color": "#10b981", "fontWeight": "700"}),
+                        html.Span("13+ global instruments: crypto, forex, indices, and commodities", style={
+                            "color": "#94a3b8", "fontSize": "12px",
+                        }),
+                    ]),
+                ], style={
+                    "padding": "14px 16px", "borderRadius": "12px",
+                    "background": "rgba(16,185,129,0.04)", "border": "1px solid rgba(16,185,129,0.08)",
                 }),
             ], style={"marginBottom": "28px"}),
 
@@ -1139,12 +1172,18 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
                 "display": "flex", "alignItems": "center", "justifyContent": "center",
                 "margin": "0 auto 16px", "boxShadow": "0 8px 30px rgba(99,102,241,0.3)",
             }),
-            html.H2("Welcome Back", style={
+            html.H2([
+                html.Span("MarketLens", style={"color": "#e2e8f0"}),
+                html.Span(" AI", style={"color": "#06b6d4"}),
+            ], style={
                 "textAlign": "center", "fontSize": "1.3rem", "fontWeight": "800",
-                "color": "#e2e8f0", "margin": "0 0 4px 0",
+                "margin": "0 0 4px 0",
             }),
-            html.P("Sign in to your trading dashboard", style={
-                "textAlign": "center", "color": "#64748b", "fontSize": "12px", "margin": "0 0 24px 0",
+            html.P([
+                html.Span("AI-Powered", style={"color": "#a78bfa", "fontWeight": "600"}),
+                html.Span(" Market Intelligence", style={"color": "#64748b"}),
+            ], style={
+                "textAlign": "center", "fontSize": "12px", "margin": "0 0 24px 0",
             }),
 
             # Error message
@@ -1619,14 +1658,9 @@ def build_user_badge(user: Optional[Dict]):
                 "fontSize": "11px", "fontWeight": "600", "cursor": "pointer",
             }),
         ], style={"display": "flex", "gap": "8px"}),
-
-        # Contact support button
-        html.Div([
-            html.Button("📧 Contact Support", id="open-contact-btn-pricing", n_clicks=0,
-                        style={"color": "#475569", "fontSize": "10px", "background": "none",
-                               "border": "none", "cursor": "pointer", "fontWeight": "500",
-                               "textDecoration": "underline", "padding": "0"}),
-        ], style={"textAlign": "center", "marginTop": "8px"}),
+        # Hidden contact button — keeps callback wired (visible contact is in footer)
+        html.Button("", id="open-contact-btn-pricing", n_clicks=0,
+                    style={"display": "none"}),
     ], style={
         "marginBottom": "16px", "padding": "14px",
         "background": "rgba(15,23,42,0.4)", "borderRadius": "12px",

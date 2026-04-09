@@ -2195,17 +2195,27 @@ def _build_main_dashboard(user=None):
                     options=[{"label": t, "value": t} for t in allowed_tickers],
                     value=allowed_tickers[0] if allowed_tickers else "BTCUSD",
                     clearable=False,
-                    style={"marginBottom": "12px"},
+                    style={
+                        "marginBottom": "12px",
+                        "color": "#e2e8f0",
+                        "fontWeight": "600",
+                        "fontSize": "14px",
+                    },
                 ),
 
-                # Quick select
+                # Quick select — only show groups that contain at least one allowed ticker
                 html.Div("QUICK SELECT", className="sidebar-section-label"),
                 html.Div([
                     html.Button(name.split(" ")[-1], id={"type": "group-btn", "index": name},
                                 className="sidebar-quick-btn",
                                 n_clicks=0)
                     for name in TICKER_GROUPS.keys()
-                ], style={"display": "flex", "flexWrap": "wrap", "gap": "6px", "marginBottom": "20px"}),
+                    if any(t in allowed_tickers for t in TICKER_GROUPS[name])
+                ], style={"display": "flex", "flexWrap": "wrap", "gap": "6px", "marginBottom": "6px"}),
+                # Show ticker count for user's plan
+                html.Div(f"{len(allowed_tickers)} assets available on your plan", style={
+                    "color": "#475569", "fontSize": "10px", "marginBottom": "20px",
+                }),
 
                 html.Div(style={"height": "1px", "background": "linear-gradient(90deg, transparent, rgba(99,102,241,0.2), transparent)",
                                 "margin": "0 0 20px 0"}),
@@ -2222,14 +2232,11 @@ def _build_main_dashboard(user=None):
                         id="mtf-checklist",
                         options=[
                             {"label": " 15m", "value": "15min",
-                             "disabled": "15min" not in allowed_timeframes or
-                                         (SAAS_AUTH_AVAILABLE and user and not can_access_feature(user, "mtf_analysis"))},
+                             "disabled": "15min" not in allowed_timeframes},
                             {"label": " 1H", "value": "1hour",
-                             "disabled": "1hour" not in allowed_timeframes or
-                                         (SAAS_AUTH_AVAILABLE and user and not can_access_feature(user, "mtf_analysis"))},
+                             "disabled": "1hour" not in allowed_timeframes},
                             {"label": " 4H", "value": "4hour",
-                             "disabled": "4hour" not in allowed_timeframes or
-                                         (SAAS_AUTH_AVAILABLE and user and not can_access_feature(user, "mtf_analysis"))},
+                             "disabled": "4hour" not in allowed_timeframes},
                             {"label": " 1D", "value": "1day",
                              "disabled": "1day" not in allowed_timeframes},
                         ],
@@ -3044,13 +3051,24 @@ def highlight_active_nav(active_page):
 @callback(
     Output("ticker-dropdown", "value"),
     Input({"type": "group-btn", "index": ALL}, "n_clicks"),
+    State("user-session", "data"),
     prevent_initial_call=True,
 )
-def quick_select_group(n_clicks_list):
+def quick_select_group(n_clicks_list, session_data):
     if not ctx.triggered_id:
         raise PreventUpdate
     group_name = ctx.triggered_id["index"]
     tickers = TICKER_GROUPS.get(group_name, [])
+
+    # Filter to only tickers the user's plan allows
+    if SAAS_AUTH_AVAILABLE and session_data:
+        token = session_data.get("token") if isinstance(session_data, dict) else None
+        if token:
+            user = get_user_by_token(token)
+            if user:
+                user_tickers = get_allowed_tickers(user)
+                tickers = [t for t in tickers if t in user_tickers]
+
     if tickers:
         return tickers[0]
     raise PreventUpdate
