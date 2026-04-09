@@ -450,15 +450,85 @@ body {
     font-size: 12px; color: var(--text-muted);
 }
 
-/* ══ Dash-specific overrides ══ */
+/* ══ Dash-specific overrides — ALL dropdowns, selects, inputs ══ */
 .Select-control {
     background: rgba(15,23,42,0.6) !important;
     border-color: var(--glass-border) !important;
+    min-height: 40px !important;
 }
-.Select-menu-outer { background: var(--bg-secondary) !important; }
-.Select-option { background: var(--bg-secondary) !important; color: var(--text-primary) !important; }
-.Select-option.is-focused { background: rgba(99,102,241,0.15) !important; }
-.Select-value-label { color: var(--text-primary) !important; }
+.Select-menu-outer {
+    background: var(--bg-secondary) !important;
+    border: 1px solid rgba(99,102,241,0.2) !important;
+    border-radius: 10px !important;
+    z-index: 9999 !important;
+}
+.Select-option {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    padding: 10px 14px !important;
+}
+.Select-option.is-focused {
+    background: rgba(99,102,241,0.15) !important;
+    color: #fff !important;
+}
+.Select-value-label {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+}
+.Select-placeholder {
+    color: var(--text-muted) !important;
+    font-size: 14px !important;
+}
+.Select-input > input {
+    color: var(--text-primary) !important;
+}
+.Select-clear-zone { color: var(--text-muted) !important; }
+.Select-arrow-zone { color: var(--text-muted) !important; }
+.Select.is-open .Select-control {
+    border-color: rgba(99,102,241,0.3) !important;
+}
+
+/* Dash number inputs (Initial Capital, Commission, etc.) */
+.dash-input,
+input.dash-input-display,
+input[type="number"],
+input[type="text"] {
+    background: rgba(15,23,42,0.6) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 8px !important;
+    color: var(--text-primary) !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    padding: 8px 12px !important;
+}
+input[type="number"]:focus,
+input[type="text"]:focus {
+    border-color: rgba(99,102,241,0.3) !important;
+    outline: none !important;
+}
+
+/* Dash dropdown (newer versions use .dash-dropdown) */
+.dash-dropdown .Select-control { background: rgba(15,23,42,0.6) !important; }
+.dash-dropdown .Select-value-label { color: var(--text-primary) !important; font-weight: 600 !important; }
+
+/* dcc.Input fields */
+.dash-input--focused {
+    border-color: rgba(99,102,241,0.3) !important;
+}
+
+/* dbc number input +/- buttons */
+.input-group-prepend .btn,
+.input-group-append .btn,
+button.btn-outline-secondary {
+    background: rgba(15,23,42,0.5) !important;
+    border-color: var(--glass-border) !important;
+    color: var(--text-secondary) !important;
+}
+button.btn-outline-secondary:hover {
+    background: rgba(99,102,241,0.12) !important;
+    color: var(--text-primary) !important;
+}
 
 /* Dash tabs */
 .tab-container .tab {

@@ -2225,14 +2225,11 @@ def _build_main_dashboard(user=None):
 
                 html.Div(style={"height": "1px", "background": "linear-gradient(90deg, transparent, rgba(99,102,241,0.2), transparent)",
                                 "margin": "0 0 20px 0"}),
-                html.Div([
+                # Multi-Timeframe Analysis — only show for plans with mtf_analysis
+                *([ html.Div([
                     html.Div([
                         html.Span("⏱️", style={"fontSize": "12px"}),
                         html.Span("Multi-Timeframe Analysis", style={"fontSize": "11px", "color": "#64748b"}),
-                        # MTF lock badge for plans without mtf_analysis feature
-                        *([html.Span("🔒", style={"fontSize": "10px", "marginLeft": "4px"})]
-                          if SAAS_AUTH_AVAILABLE and user and not can_access_feature(user, "mtf_analysis")
-                          else []),
                     ], style={"display": "flex", "alignItems": "center", "gap": "6px", "marginBottom": "8px"}),
                     dcc.Checklist(
                         id="mtf-checklist",
@@ -2251,18 +2248,37 @@ def _build_main_dashboard(user=None):
                         className="sidebar-mtf-checklist",
                         style={"fontSize": "11px"},
                     ),
-                    # Upgrade hint when MTF is locked
-                    *([html.Div([
-                        html.Span("⚡ ", style={"fontSize": "10px"}),
-                        html.Span("Upgrade to Starter to unlock multi-timeframe consensus", style={
-                            "color": "#f59e0b", "fontSize": "10px", "fontWeight": "500",
-                        }),
-                    ], style={"marginTop": "6px", "padding": "5px 8px", "borderRadius": "6px",
-                              "background": "rgba(245,158,11,0.06)",
-                              "border": "1px solid rgba(245,158,11,0.1)"})]
-                      if SAAS_AUTH_AVAILABLE and user and not can_access_feature(user, "mtf_analysis")
-                      else []),
-                ], style={"marginBottom": "20px"}),
+                ], style={"marginBottom": "20px"})]
+                if not SAAS_AUTH_AVAILABLE or not user or can_access_feature(user, "mtf_analysis")
+                else [
+                    # Locked MTF for free/discovery — show only 1D with upgrade hint
+                    html.Div([
+                        html.Div([
+                            html.Span("⏱️", style={"fontSize": "12px"}),
+                            html.Span("Timeframe", style={"fontSize": "11px", "color": "#64748b"}),
+                            html.Span("1D", style={
+                                "fontSize": "11px", "fontWeight": "700", "color": "#06b6d4",
+                                "background": "rgba(6,182,212,0.1)", "padding": "2px 8px",
+                                "borderRadius": "6px", "border": "1px solid rgba(6,182,212,0.2)",
+                            }),
+                        ], style={"display": "flex", "alignItems": "center", "gap": "8px", "marginBottom": "8px"}),
+                        # Hidden checklist — keeps callback wired
+                        dcc.Checklist(
+                            id="mtf-checklist",
+                            options=[{"label": "", "value": "1day"}],
+                            value=["1day"],
+                            style={"display": "none"},
+                        ),
+                        html.Div([
+                            html.Span("🔒 ", style={"fontSize": "10px"}),
+                            html.Span("Upgrade to Starter to unlock multi-timeframe analysis", style={
+                                "color": "#f59e0b", "fontSize": "10px", "fontWeight": "500",
+                            }),
+                        ], style={"padding": "5px 8px", "borderRadius": "6px",
+                                  "background": "rgba(245,158,11,0.06)",
+                                  "border": "1px solid rgba(245,158,11,0.1)"}),
+                    ], style={"marginBottom": "20px"}),
+                ]),
 
                 html.Div(style={"height": "1px", "background": "linear-gradient(90deg, transparent, rgba(99,102,241,0.2), transparent)",
                                 "margin": "0 0 20px 0"}),
@@ -2675,7 +2691,7 @@ PAGE_HEADERS = {
     "portfolio_mgmt": ("💼", "Portfolio Management", "Black-Litterman AI portfolio optimization"),
     "backtesting": ("📈", "Advanced AI Backtesting", "Walk-forward validation and strategy analysis"),
     "ftmo_dashboard": ("🏦", "FTMO Dashboard", "FTMO challenge tracking and risk management"),
-    "model_training": ("🧠", "Model Training Center", "Train, monitor, and manage AI models"),
+    "model_training": ("🧠", "AI Models", "Explore model architectures, performance, and configurations"),
     "app_guide": ("📖", "Platform Guide", "How the platform works, features, and AI model explanations"),
     "admin_panel": ("🛡️", "Admin Dashboard", "User management, email center, and system monitoring"),
 }
@@ -2737,7 +2753,7 @@ def route_page(page, prediction, ticker, ftmo_state, session_data):
         "portfolio_mgmt": ("portfolio", "Portfolio Optimization", "enterprise"),
         "backtesting": ("backtesting", "Walk-Forward Backtesting", "professional"),
         "ftmo_dashboard": ("ftmo_dashboard", "FTMO Dashboard", "professional"),
-        "model_training": ("model_training", "Model Training Center", "professional"),
+        # model_training removed — Models page is open to all plans (view-only for free/discovery)
     }
 
     if SAAS_AUTH_AVAILABLE and page in feature_map:
