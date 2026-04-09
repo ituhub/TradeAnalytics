@@ -2046,7 +2046,7 @@ app = dash.Dash(
         "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap",
     ],
     suppress_callback_exceptions=True,
-    title="MarketLens AI",
+    title="MarketLens",
     update_title="Analyzing...",
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"},
@@ -2151,10 +2151,10 @@ def _build_main_dashboard(user=None):
                     options=[
                         {"label": "", "value": "ai_prediction"},
                         {"label": "", "value": "advanced_analytics"},
-                        {"label": "", "value": "portfolio_mgmt"},
+                        {"label": "", "value": "portfolio"},
                         {"label": "", "value": "backtesting"},
                         {"label": "", "value": "ftmo_dashboard"},
-                        {"label": "", "value": "model_training"},
+                        {"label": "", "value": "models"},
                         {"label": "", "value": "subscription"},
                         {"label": "", "value": "app_guide"},
                         {"label": "", "value": "admin_panel"},
@@ -2324,7 +2324,7 @@ def _build_main_dashboard(user=None):
             html.Div([
                 html.Hr(style={"borderColor": "rgba(99,102,241,0.08)"}),
                 html.Div([
-                    html.Span("MarketLens AI — Dash Edition", style={"color": "#475569", "fontSize": "12px"}),
+                    html.Span("MarketLens — Dash Edition", style={"color": "#475569", "fontSize": "12px"}),
                     html.Span(" · ", style={"color": "#334155"}),
                     html.Span("For research purposes only", style={"color": "#475569", "fontSize": "12px"}),
                     html.Span(" · ", style={"color": "#334155"}),
