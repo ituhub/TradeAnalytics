@@ -892,7 +892,7 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
                     "background": "rgba(6,182,212,0.08)", "border": "1px solid rgba(6,182,212,0.15)",
                 }),
                 html.P(
-                    "Transform complex market data into clear, data-driven insights.",
+                    "Transform complex market data into clear data-driven insights.",
                     style={
                         "color": "#e2e8f0", "fontSize": "clamp(1.1rem, 2.5vw, 1.5rem)",
                         "fontWeight": "700", "lineHeight": "1.3",
@@ -1333,14 +1333,168 @@ def build_login_page(error_msg: str = "", success_msg: str = ""):
 
             # Footer links
             html.Div([
-                html.A("Terms of Service", href="#", style={
+                html.A("Terms of Service", id="show-terms-link", href="#",
+                       n_clicks=0, style={
                     "color": "#475569", "fontSize": "11px", "textDecoration": "none",
+                    "cursor": "pointer",
                 }),
                 html.Span(" • ", style={"color": "#334155", "fontSize": "12px"}),
-                html.A("Privacy Policy", href="#", style={
+                html.A("Privacy Policy", id="show-privacy-link", href="#",
+                       n_clicks=0, style={
                     "color": "#475569", "fontSize": "11px", "textDecoration": "none",
+                    "cursor": "pointer",
                 }),
             ], style={"textAlign": "center", "marginTop": "4px"}),
+
+            # Terms of Service (hidden by default)
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.H3("Terms of Service", style={
+                            "color": "#e2e8f0", "fontSize": "16px", "fontWeight": "700",
+                            "margin": "0 0 4px 0",
+                        }),
+                        html.A("✕", id="close-terms-link", href="#", n_clicks=0, style={
+                            "color": "#64748b", "fontSize": "18px", "textDecoration": "none",
+                            "cursor": "pointer", "fontWeight": "700",
+                        }),
+                    ], style={"display": "flex", "justifyContent": "space-between", "alignItems": "center",
+                               "marginBottom": "16px"}),
+                    html.P("Last updated: April 2026", style={
+                        "color": "#475569", "fontSize": "11px", "marginBottom": "12px",
+                    }),
+                    html.Div([
+                        html.P("By creating an account or using MarketLens AI, you agree to the following terms.", style={
+                            "color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px",
+                        }),
+                        html.P("1. Service Description", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "MarketLens AI is a market research and analysis platform. It provides AI-driven analytical tools "
+                            "for educational and research purposes. It does not provide financial advice, investment recommendations, "
+                            "or trading signals. All analysis outputs are for informational purposes only.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px"},
+                        ),
+                        html.P("2. User Accounts", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "You are responsible for maintaining the security of your account credentials. "
+                            "Each account is for individual use only. You agree to provide accurate information during registration.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px"},
+                        ),
+                        html.P("3. Subscription & Billing", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "Paid plans are billed monthly or yearly via Stripe. You may cancel at any time. "
+                            "Refunds are available within 14 days of purchase. The Discovery plan is free for 14 days "
+                            "and automatically reverts to the free tier upon expiry.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px"},
+                        ),
+                        html.P("4. Acceptable Use", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "You agree not to reverse-engineer, scrape, or redistribute any analysis outputs, model data, "
+                            "or proprietary algorithms. Automated access without permission is prohibited.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px"},
+                        ),
+                        html.P("5. Disclaimer", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "Trading and investing involve risk. Past performance of any analytical model does not guarantee "
+                            "future results. MarketLens AI is not liable for any financial losses incurred based on the use of this platform. "
+                            "Always conduct your own research and consult a qualified financial advisor before making investment decisions.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px"},
+                        ),
+                        html.P("6. Contact", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "For questions about these terms, contact us at itubusinesshub@gmail.com.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6"},
+                        ),
+                    ], style={"maxHeight": "300px", "overflowY": "auto",
+                               "scrollbarWidth": "thin", "scrollbarColor": "rgba(99,102,241,0.2) transparent"}),
+                ], style={
+                    "padding": "20px", "borderRadius": "14px",
+                    "background": "rgba(15,23,42,0.95)", "backdropFilter": "blur(20px)",
+                    "border": "1px solid rgba(99,102,241,0.15)",
+                    "boxShadow": "0 20px 60px rgba(0,0,0,0.6)",
+                    "maxWidth": "400px", "width": "100%",
+                }),
+            ], id="terms-panel", style={"display": "none",
+                "position": "fixed", "top": "0", "left": "0", "right": "0", "bottom": "0",
+                "background": "rgba(0,0,0,0.6)", "zIndex": "9999",
+                "display": "none", "alignItems": "center", "justifyContent": "center",
+                "padding": "20px",
+            }),
+
+            # Privacy Policy (hidden by default)
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.H3("Privacy Policy", style={
+                            "color": "#e2e8f0", "fontSize": "16px", "fontWeight": "700",
+                            "margin": "0 0 4px 0",
+                        }),
+                        html.A("✕", id="close-privacy-link", href="#", n_clicks=0, style={
+                            "color": "#64748b", "fontSize": "18px", "textDecoration": "none",
+                            "cursor": "pointer", "fontWeight": "700",
+                        }),
+                    ], style={"display": "flex", "justifyContent": "space-between", "alignItems": "center",
+                               "marginBottom": "16px"}),
+                    html.P("Last updated: April 2026", style={
+                        "color": "#475569", "fontSize": "11px", "marginBottom": "12px",
+                    }),
+                    html.Div([
+                        html.P("MarketLens AI respects your privacy. This policy explains how we collect, use, and protect your data.", style={
+                            "color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px",
+                        }),
+                        html.P("1. Data We Collect", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "When you create an account, we collect your name, email address, and an encrypted password. "
+                            "We also store your plan type, usage statistics (daily analysis count), and subscription status. "
+                            "We do not collect payment card details — all payments are processed securely by Stripe.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px"},
+                        ),
+                        html.P("2. How We Use Your Data", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "Your data is used to: authenticate your account, enforce plan-based access limits, "
+                            "send account-related emails (password reset, subscription updates), and improve the platform. "
+                            "We do not sell, share, or rent your personal information to third parties.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px"},
+                        ),
+                        html.P("3. Data Storage & Security", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "Your data is stored in Google Cloud Firestore with encryption at rest and in transit. "
+                            "Passwords are hashed using SHA-256 with unique salts. Session tokens are generated using "
+                            "cryptographically secure random functions. We follow industry-standard security practices.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px"},
+                        ),
+                        html.P("4. Cookies & Local Storage", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "We use browser localStorage to maintain your login session. We do not use tracking cookies "
+                            "or third-party analytics. No advertising cookies are used.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px"},
+                        ),
+                        html.P("5. Your Rights", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "You may request access to, correction of, or deletion of your personal data at any time "
+                            "by contacting itubusinesshub@gmail.com. Account deletion removes all associated data from our systems.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6", "marginBottom": "10px"},
+                        ),
+                        html.P("6. Contact", style={"color": "#e2e8f0", "fontSize": "12px", "fontWeight": "600", "marginBottom": "4px"}),
+                        html.P(
+                            "For privacy-related inquiries, contact us at itubusinesshub@gmail.com.",
+                            style={"color": "#94a3b8", "fontSize": "12px", "lineHeight": "1.6"},
+                        ),
+                    ], style={"maxHeight": "300px", "overflowY": "auto",
+                               "scrollbarWidth": "thin", "scrollbarColor": "rgba(99,102,241,0.2) transparent"}),
+                ], style={
+                    "padding": "20px", "borderRadius": "14px",
+                    "background": "rgba(15,23,42,0.95)", "backdropFilter": "blur(20px)",
+                    "border": "1px solid rgba(99,102,241,0.15)",
+                    "boxShadow": "0 20px 60px rgba(0,0,0,0.6)",
+                    "maxWidth": "400px", "width": "100%",
+                }),
+            ], id="privacy-panel", style={"display": "none",
+                "position": "fixed", "top": "0", "left": "0", "right": "0", "bottom": "0",
+                "background": "rgba(0,0,0,0.6)", "zIndex": "9999",
+                "display": "none", "alignItems": "center", "justifyContent": "center",
+                "padding": "20px",
+            }),
 
         ], style={
             "maxWidth": "400px", "width": "100%", "padding": "32px 28px",
