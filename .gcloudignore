@@ -16,3 +16,4 @@ saved_results/
 *.tar.gz
 data/users.json
 __pycache__/
+__pycache__/
