@@ -2222,11 +2222,14 @@ def _build_main_dashboard(user=None):
                         id="mtf-checklist",
                         options=[
                             {"label": " 15m", "value": "15min",
-                             "disabled": "15min" not in allowed_timeframes},
+                             "disabled": "15min" not in allowed_timeframes or
+                                         (SAAS_AUTH_AVAILABLE and user and not can_access_feature(user, "mtf_analysis"))},
                             {"label": " 1H", "value": "1hour",
-                             "disabled": "1hour" not in allowed_timeframes},
+                             "disabled": "1hour" not in allowed_timeframes or
+                                         (SAAS_AUTH_AVAILABLE and user and not can_access_feature(user, "mtf_analysis"))},
                             {"label": " 4H", "value": "4hour",
-                             "disabled": "4hour" not in allowed_timeframes},
+                             "disabled": "4hour" not in allowed_timeframes or
+                                         (SAAS_AUTH_AVAILABLE and user and not can_access_feature(user, "mtf_analysis"))},
                             {"label": " 1D", "value": "1day",
                              "disabled": "1day" not in allowed_timeframes},
                         ],
