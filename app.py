@@ -2068,6 +2068,7 @@ app.layout = html.Div([
     dcc.Store(id="user-session", storage_type="local", data=None),
     dcc.Store(id="disclaimer-store", storage_type="local", data={"accepted": False}),
     dcc.Store(id="contact-form-store", data={"visible": False}),
+    dcc.Store(id="timeframe-dropdown", data="1day"),  # Hidden timeframe state for prediction callback
     dcc.Location(id="url", refresh=True),
     dcc.Store(id="redirect-store", data=None),
 
@@ -2884,7 +2885,7 @@ def build_ai_prediction_page(prediction, ticker):
     Input("predict-btn", "n_clicks"),
     State("ticker-dropdown", "value"),
     State("model-checklist", "value"),
-    State("timeframe-dropdown", "value"),
+    State("timeframe-dropdown", "data"),
     State("mtf-checklist", "value"),
     State("user-session", "data"),
     prevent_initial_call=True,
